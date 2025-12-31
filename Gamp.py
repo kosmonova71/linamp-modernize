@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Linamp audio player and visualizer. Provides GUI, audio engine, and optional ProjectM visualizations."""
-from dataclasses import dataclass
-from functools import lru_cache
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+"""Linamp - A modern audio player with visualization capabilities.
+
+This module provides a complete audio player application with features including:
+- Audio playback with GStreamer integration
+- Real-time audio visualization with multiple modes
+- Equalizer with presets and custom band control
+- Crossfade and beat-aware transitions
+- ProjectM integration for advanced visualizations
+- GTK4-based user interface
+- Playlist management and metadata handling
+"""
 
 import ctypes
 import gc
@@ -13,14 +19,19 @@ import math
 import os
 import random
 import select
+import shutil
 import subprocess
 import sys
 import threading
 import time
+from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 import cairo
+import gi
 import numpy as np
-import shutil
 
 try:
     import sounddevice as sd
@@ -39,14 +50,14 @@ except ImportError:
     OPENGL_AVAILABLE = False
     logging.getLogger(__name__).warning("OpenGL support not available, using fallback mode")
 
-import gi
+
 
 try:
     gi.require_version("Gtk", "4.0")
     gi.require_version("Gst", "1.0")
     gi.require_version("GstVideo", "1.0")
     gi.require_version("Gdk", "4.0")
-    from gi.repository import Gtk, Gst, GLib, Gio, GObject, Gdk, Pango
+    from gi.repository import Gdk, Gio, GLib, GObject, Gst, Gtk, Pango
     GTK_GST_AVAILABLE = True
 except Exception as e:
     # Allow importing module in headless/test environments; GUI/GStreamer features will be disabled
@@ -141,6 +152,7 @@ logger = logging.getLogger(APP_NAME)
 @dataclass
 class AudioConfig:
     """Configuration for audio playback and equalizer settings."""
+
     volume: float = VOLUME_DEFAULT
     crossfade_enabled: bool = False
     crossfade_duration: float = CROSSFADE_DURATION_DEFAULT
@@ -149,12 +161,14 @@ class AudioConfig:
     preamp_value: float = 0.0
 
     def __post_init__(self):
+        """Initialize default equalizer values if not provided."""
         if self.eq_values is None:
             self.eq_values = [0.0] * len(EQ_FREQUENCIES)
 
 @dataclass
 class VisualizationConfig:
     """Settings controlling visualizer mode and appearance."""
+
     mode: int = 0
     color_scheme: int = 0
     intensity: float = 1.0
@@ -166,6 +180,7 @@ class Config:
     """Persistent application configuration management."""
 
     def __init__(self):
+        """Initialize configuration manager with default settings and file paths."""
         self.config_dir = Path.home() / ".config" / "linamp"
         self.config_file = self.config_dir / "config.json"
         self.playlist_file = self.config_dir / "playlist.json"
@@ -192,6 +207,7 @@ class Config:
         self.data = self.load()
 
     def load(self) -> Dict[str, Any]:
+        """Load configuration from disk, merging with defaults and validating values."""
         if not self.config_file.exists():
             logger.info("Config file not found, using defaults")
             return self.default.copy()
@@ -216,6 +232,7 @@ class Config:
             return self.default.copy()
 
     def save(self) -> bool:
+        """Persist current configuration to disk, creating a backup if present."""
         try:
             if self.config_file.exists():
                 backup_file = self.config_file.with_suffix('.json.bak')
@@ -232,6 +249,7 @@ class Config:
             return False
 
     def load_playlist(self) -> List[str]:
+        """Load the saved playlist from disk, filtering out non-existent entries."""
         if not self.playlist_file.exists():
             logger.info("Playlist file not found")
             return []
@@ -255,6 +273,7 @@ class Config:
             return []
 
     def save_playlist(self, playlist: List[str]) -> bool:
+        """Save the playlist to disk atomically and return success status."""
         try:
             if not isinstance(playlist, list):
                 logger.error("Invalid playlist format for saving")
@@ -271,6 +290,7 @@ class Config:
             return False
 
     def get_audio_config(self) -> AudioConfig:
+        """Return an AudioConfig populated from persisted configuration values."""
         return AudioConfig(
             volume=self.data.get("volume", VOLUME_DEFAULT),
             crossfade_enabled=self.data.get("crossfade_enabled", False),
@@ -281,6 +301,7 @@ class Config:
         )
 
     def get_visualization_config(self) -> VisualizationConfig:
+        """Return a VisualizationConfig populated from persisted configuration values."""
         return VisualizationConfig(
             mode=self.data.get("visualization_mode", 0),
             color_scheme=self.data.get("color_scheme", 0),
@@ -291,6 +312,8 @@ class Config:
         )
 
 class Track(GObject.Object):
+    """Represents an audio track with metadata and GObject properties."""
+
     filename = GObject.Property(type=str)
     title = GObject.Property(type=str)
     artist = GObject.Property(type=str)
@@ -300,6 +323,7 @@ class Track(GObject.Object):
 
     def __init__(self, filename: str, title: Optional[str] = None,
                  artist: Optional[str] = None, album: Optional[str] = None):
+        """Initialize a Track with filename and optional metadata."""
         super().__init__()
         if not filename or not os.path.exists(filename):
             logger.error(f"Invalid track filename: {filename}")
@@ -323,23 +347,28 @@ class Track(GObject.Object):
             self.metadata_loaded = False
 
     def get_display_name(self) -> str:
+        """Return a human-friendly display name for the track."""
         if self.artist != "Unknown Artist":
             return f"{self.artist} - {self.title}"
         return self.title
 
     def get_file_size(self) -> int:
+        """Return the file size of the track file, or 0 on error."""
         try:
             return os.path.getsize(self.filename)
         except OSError:
             return 0
 
     def is_valid_audio_file(self) -> bool:
+        """Return True if the track filename has a supported audio extension."""
         ext = os.path.splitext(self.filename)[1].lower()
         return ext in SUPPORTED_AUDIO_FORMATS
 
 class AudioEngine(GObject.Object):
+    """Handles audio playback, equalization, and visualization processing."""
 
     def __init__(self, config: Config):
+        """Initialize the AudioEngine with configuration and setup all subsystems."""
         super().__init__()
         self.config = config
         self._setup_audio_components()
@@ -391,11 +420,13 @@ class AudioEngine(GObject.Object):
             logger.info(f"Crossfade enabled from config ({self.crossfade_duration}s duration)")
 
     def enable_crossfade(self, duration: float = CROSSFADE_DURATION_DEFAULT):
+        """Enable crossfade between tracks and set duration."""
         self.crossfade_enabled = True
         self.crossfade_duration = duration
         logger.info(f"Crossfade enabled with duration: {duration}s")
 
     def disable_crossfade(self):
+        """Disable crossfade and clean up any pending crossfade state."""
         self.crossfade_enabled = False
         self.crossfade_active = False
         if self.next_player:
@@ -407,6 +438,7 @@ class AudioEngine(GObject.Object):
         logger.info("Crossfade disabled")
 
     def prepare_crossfade(self, next_uri: str):
+        """Prepare a second player instance for smooth crossfade into the given URI."""
         if not self.crossfade_enabled or self.crossfade_active:
             return False
         try:
@@ -427,6 +459,7 @@ class AudioEngine(GObject.Object):
             return False
 
     def start_crossfade(self):
+        """Begin the crossfade transition between current and prepared next track."""
         if not self.crossfade_enabled or not self.next_player or self.crossfade_active:
             return False
         try:
@@ -545,6 +578,7 @@ class AudioEngine(GObject.Object):
             self.enable_beat_aware()
 
     def enable_beat_aware(self):
+        """Enable beat-aware features and start the analysis thread if needed."""
         self.beat_aware_enabled = True
         if not self.beat_analysis_thread:
             self.beat_analysis_thread = threading.Thread(target=self._beat_analysis_loop, daemon=True)
@@ -552,6 +586,7 @@ class AudioEngine(GObject.Object):
         logger.info("Beat detection enabled")
 
     def disable_beat_aware(self):
+        """Disable beat-aware processing and stop the analysis thread."""
         self.beat_aware_enabled = False
         if self.beat_analysis_thread:
             self.beat_analysis_thread = None
@@ -617,12 +652,15 @@ class AudioEngine(GObject.Object):
             logger.error(f"Beat analysis error: {e}")
 
     def get_current_bpm(self) -> float:
+        """Return the currently detected BPM (beats per minute)."""
         return self.current_bpm
 
     def is_beat_detected(self) -> bool:
+        """Return True if a beat was detected during the most recent analysis."""
         return self.beat_detected
 
     def get_beat_positions(self) -> list:
+        """Return a copy of recent beat timestamps (seconds since epoch)."""
         return self.beat_positions.copy()
 
     def _setup_visualization(self):
@@ -645,10 +683,12 @@ class AudioEngine(GObject.Object):
 
     @property
     def eq_frequencies(self) -> List[int]:
+        """Return a copy of the equalizer frequency band center frequencies."""
         return EQ_FREQUENCIES.copy()
 
     @property
     def eq_presets(self) -> Dict[str, List[int]]:
+        """Return predefined equalizer presets mapping names to band values."""
         return {
             "Flat": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             "Rock": [5, 4, 3, 1, 0, -1, -2, -3, -3, -4],
@@ -677,6 +717,7 @@ class AudioEngine(GObject.Object):
         }
 
     def setup_equalizer(self):
+        """Initialize equalizer pipeline elements and attach to player audio sink."""
         try:
             audio_sink = Gst.ElementFactory.make("autoaudiosink", "audio-sink")
             if not audio_sink:
@@ -714,6 +755,7 @@ class AudioEngine(GObject.Object):
                 logger.error(f"Fallback audio sink also failed: {fallback_error}")
 
     def apply_equalizer_settings(self):
+        """Apply stored equalizer and preamp values to the audio pipeline."""
         try:
             if self.eq:
                 for i, value in enumerate(self.eq_values):
@@ -727,6 +769,7 @@ class AudioEngine(GObject.Object):
             logger.error(f"Failed to apply equalizer settings: {e}")
 
     def set_eq_band(self, band: int, value: float) -> bool:
+        """Set a specific equalizer band (dB) and apply it if equalizer is available."""
         try:
             if not (0 <= band < len(EQ_FREQUENCIES)):
                 logger.warning(f"Invalid band index: {band}")
@@ -748,7 +791,7 @@ class AudioEngine(GObject.Object):
             return False
 
     def reset_equalizer(self) -> bool:
-        """Reset all equalizer bands to 0 dB"""
+        """Reset all equalizer bands to 0 dB."""
         try:
             for i in range(len(EQ_FREQUENCIES)):
                 self.eq_values[i] = 0.0
@@ -761,6 +804,7 @@ class AudioEngine(GObject.Object):
             return False
 
     def set_preamp(self, value: float) -> bool:
+        """Set the preamp value in dB and update the preamp element if present."""
         try:
             min_db, max_db = EQ_BAND_RANGE
             if not (min_db <= value <= max_db):
@@ -780,12 +824,15 @@ class AudioEngine(GObject.Object):
             return False
 
     def get_eq_bands(self) -> List[float]:
+        """Return a copy of the current equalizer band values."""
         return self.eq_values.copy()
 
     def get_preamp(self) -> float:
+        """Return the current preamp value in dB."""
         return self.preamp_value
 
     def simulate_audio_data(self):
+        """Append synthetic audio samples to the internal buffer for testing/visualization."""
         try:
             current_time = self.query_position_seconds()
             buffer_size = 1024
@@ -817,17 +864,20 @@ class AudioEngine(GObject.Object):
                     self.audio_buffer.append(sample)
 
     def start_beat_analysis(self):
+        """Start a dedicated beat analysis worker thread if not already running."""
         if self.beat_analysis_thread and self.beat_analysis_thread.is_alive():
             return
         self.beat_analysis_thread = threading.Thread(target=self.beat_analysis_loop, daemon=True)
         self.beat_analysis_thread.start()
 
     def stop_beat_analysis(self):
+        """Stop the beat analysis thread and clear related buffers."""
         self.beat_analysis_thread = None
         with self.buffer_lock:
             self.audio_buffer.clear()
 
     def beat_analysis_loop(self):
+        """Process audio buffer windows to detect beats and update BPM/positions."""
         try:
             window_size = 1024
             hop_size = 512
@@ -840,27 +890,35 @@ class AudioEngine(GObject.Object):
                         continue
                     window = self.audio_buffer[:window_size]
                     self.audio_buffer = self.audio_buffer[hop_size:]
-                energy = np.sum(np.square(window))
-                energy_history.append(energy)
-                if len(energy_history) > 100:
-                    energy_history.pop(0)
-                if len(energy_history) >= 10:
-                    recent_avg = np.mean(energy_history[-10:-1])
-                    if recent_avg > 0 and energy / recent_avg > beat_threshold:
-                        current_time = self.query_position_seconds()
-                        if current_time > 0:
-                            self.beat_positions.append(current_time)
-                            self.beat_positions = [b for b in self.beat_positions if current_time - b < 30]
-                            if len(self.beat_positions) >= 4:
-                                intervals = np.diff(self.beat_positions[-8:])
-                                if len(intervals) > 0:
-                                    avg_interval = np.mean(intervals)
-                                    if avg_interval > 0:
-                                        self.current_bpm = 60.0 / avg_interval
+                self._process_energy_window(window, energy_history, beat_threshold)
         except Exception as e:
             logger.error(f"Beat analysis error: {e}")
 
+    def _process_energy_window(self, window, energy_history, beat_threshold):
+        """Update energy history with window energy and detect beats."""
+        try:
+            energy = np.sum(np.square(window))
+            energy_history.append(energy)
+            if len(energy_history) > 100:
+                energy_history.pop(0)
+            if len(energy_history) >= 10:
+                recent_avg = np.mean(energy_history[-10:-1])
+                if recent_avg > 0 and energy / recent_avg > beat_threshold:
+                    current_time = self.query_position_seconds()
+                    if current_time > 0:
+                        self.beat_positions.append(current_time)
+                        self.beat_positions = [b for b in self.beat_positions if current_time - b < 30]
+                        if len(self.beat_positions) >= 4:
+                            intervals = np.diff(self.beat_positions[-8:])
+                            if len(intervals) > 0:
+                                avg_interval = np.mean(intervals)
+                                if avg_interval > 0:
+                                    self.current_bpm = 60.0 / avg_interval
+        except Exception:
+            logger.exception("Error processing energy window")
+
     def query_position_seconds(self):
+        """Return the current playback position in seconds or 0.0 on error."""
         try:
             ok_pos, pos = self.player.query_position(Gst.Format.TIME)
             if ok_pos:
@@ -870,6 +928,7 @@ class AudioEngine(GObject.Object):
         return 0.0
 
     def get_next_beat_time(self, from_time=None):
+        """Return the timestamp of the next detected beat after optional from_time."""
         if from_time is None:
             from_time = self.query_position_seconds()
         for beat_pos in self.beat_positions:
@@ -885,9 +944,11 @@ class AudioEngine(GObject.Object):
         return None
 
     def set_visualizer(self, visualizer):
+        """Attach a visualizer reference to receive audio level updates."""
         self.visualizer_ref = visualizer
 
     def update_visualizer_data(self):
+        """Query playback state, update audio levels and forward them to the visualizer."""
         if not self.visualizer_ref:
             return
         try:
@@ -902,6 +963,7 @@ class AudioEngine(GObject.Object):
                 self.visualizer_ref.update_audio_levels(self.audio_levels, self.beat_detected)
 
     def generate_audio_levels(self, time_position):
+        """Generate and smooth audio energy levels used by visualizers."""
         try:
             current_volume = self.player.get_property("volume")
             is_playing = self.player.get_state(Gst.CLOCK_TIME_NONE).state == Gst.State.PLAYING
@@ -921,61 +983,73 @@ class AudioEngine(GObject.Object):
             return
 
         num_levels = len(self.audio_levels)
-        base_frequencies = [60, 120, 250, 500, 1000, 2000, 4000, 8000, 12000, 16000]
 
-        # Enhanced audio level generation with better dynamics
+        # Update each visualizer band using a helper
+        for i in range(num_levels):
+            self.audio_levels[i] = self._compute_level(i, time_position, current_volume)
+
+        # Update beat detection as a separate helper
+        self._update_beat_detection(time_position)
+
+    def _compute_level(self, i, time_position, current_volume):
+        """Compute a smoothed audio level for visualizer band index i."""
+        base_frequencies = [60, 120, 250, 500, 1000, 2000, 4000, 8000, 12000, 16000]
+        if i < len(base_frequencies):
+            freq = base_frequencies[i]
+        else:
+            freq_multiplier = 2 ** ((i - len(base_frequencies)) / 8.0)
+            freq = min(base_frequencies[-1] * freq_multiplier, 22000)
+
+        # Dynamic envelope components
         bass_boost = math.sin(time_position * 2.5) * 0.4 + math.sin(time_position * 0.5) * 0.3
         mid_range = math.sin(time_position * 4.0) * 0.3 + math.sin(time_position * 8.0) * 0.2
         high_freq = math.sin(time_position * 12.0) * 0.2 + math.sin(time_position * 20.0) * 0.1
+        time_mod = math.sin(time_position * 2 + i * 0.3) + math.sin(time_position * 7 + i * 0.7) * 0.5
 
-        for i in range(num_levels):
-            if i < len(base_frequencies):
-                freq = base_frequencies[i]
-            else:
-                freq_multiplier = 2 ** ((i - len(base_frequencies)) / 8.0)
-                freq = min(base_frequencies[-1] * freq_multiplier, 22000)
-
-            if freq < 200:
-                freq_response = 1.2 + bass_boost * 0.8
-            elif freq < 2000:
-                freq_response = 1.0 + mid_range * 0.6
-            else:
-                freq_response = 0.8 + high_freq * 0.4
-
-            time_mod = math.sin(time_position * 2 + i * 0.3) + math.sin(time_position * 7 + i * 0.7) * 0.5
-
-            if self.current_bpm > 0:
-                beat_phase = (time_position * self.current_bpm / 60.0) % 1.0
-                if beat_phase < 0.1 and freq < 200:
-                    freq_response *= 1.5
-                elif 0.4 < beat_phase < 0.5 and freq > 2000:
-                    freq_response *= 1.3
-
-            dynamic_factor = 0.3 + 0.4 * (1 + time_mod * 0.5)
-            level = (0.3 + freq_response * 0.4 + dynamic_factor + random.gauss(0, 0.05)) * current_volume
-            self.audio_levels[i] = max(0.05, min(1.0, level))
-
-        # Beat detection
-        avg_level = sum(self.audio_levels) / num_levels
-        rms_level = math.sqrt(sum(x*x for x in self.audio_levels) / num_levels)
-        current_time = time_position
-
-        if not hasattr(self, '_last_beat_time'):
-            self._last_beat_time = -10.0
-
-        beat_interval = 60.0 / self.current_bpm if self.current_bpm > 0 else 1.0
-        if (avg_level > 0.65 or rms_level > 0.5) and current_time - self._last_beat_time > beat_interval * 0.6:
-            self.beat_detected = True
-            self._last_beat_time = current_time
-            logger.debug(f"Beat detected at time {current_time:.2f}")
+        if freq < 200:
+            freq_response = 1.2 + bass_boost * 0.8
+        elif freq < 2000:
+            freq_response = 1.0 + mid_range * 0.6
         else:
-            self.beat_detected = False
+            freq_response = 0.8 + high_freq * 0.4
 
-        # Log average level for debugging
-        if int(current_time * 2) % 10 == 0:  # Log every 5 seconds
-            logger.debug(f"Audio levels - avg: {avg_level:.3f}, rms: {rms_level:.3f}, beat: {self.beat_detected}")
+        if self.current_bpm > 0:
+            beat_phase = (time_position * self.current_bpm / 60.0) % 1.0
+            if beat_phase < 0.1 and freq < 200:
+                freq_response *= 1.5
+            elif 0.4 < beat_phase < 0.5 and freq > 2000:
+                freq_response *= 1.3
+
+        dynamic_factor = 0.3 + 0.4 * (1 + time_mod * 0.5)
+        level = (0.3 + freq_response * 0.4 + dynamic_factor + random.gauss(0, 0.05)) * current_volume
+        return max(0.05, min(1.0, level))
+
+    def _update_beat_detection(self, current_time):
+        """Update beat detection state based on current audio levels and time."""
+        try:
+            num_levels = len(self.audio_levels)
+            avg_level = sum(self.audio_levels) / num_levels
+            rms_level = math.sqrt(sum(x*x for x in self.audio_levels) / num_levels)
+
+            if not hasattr(self, '_last_beat_time'):
+                self._last_beat_time = -10.0
+
+            beat_interval = 60.0 / self.current_bpm if self.current_bpm > 0 else 1.0
+            if (avg_level > 0.65 or rms_level > 0.5) and current_time - self._last_beat_time > beat_interval * 0.6:
+                self.beat_detected = True
+                self._last_beat_time = current_time
+                logger.debug(f"Beat detected at time {current_time:.2f}")
+            else:
+                self.beat_detected = False
+
+            # Log average level for debugging
+            if int(current_time * 2) % 10 == 0:  # Log every 5 seconds
+                logger.debug(f"Audio levels - avg: {avg_level:.3f}, rms: {rms_level:.3f}, beat: {self.beat_detected}")
+        except Exception:
+            logger.exception("Error updating beat detection")
 
     def apply_eq_preset(self, preset_name):
+        """Apply a named equalizer preset by setting band values."""
         if preset_name not in self.eq_presets:
             logger.warning(f"Unknown preset: {preset_name}")
             return False
@@ -987,9 +1061,11 @@ class AudioEngine(GObject.Object):
         return True
 
     def get_eq_presets(self):
+        """Return the list of available equalizer preset names."""
         return list(self.eq_presets.keys())
 
     def get_current_preset_values(self):
+        """Return the current equalizer band values read from the pipeline."""
         if not self.eq:
             return [0] * 10
         values = []
@@ -1002,10 +1078,12 @@ class AudioEngine(GObject.Object):
         return values
 
     def on_error(self, bus, msg):
+        """Handle GStreamer error messages from the playback bus."""
         err, debug = msg.parse_error()
         logger.error(f"Playback error: {err} - {debug}")
 
     def on_about_to_finish(self, element):
+        """Handle the GStreamer 'about-to-finish' callback to schedule crossfade to next track."""
         if not self.crossfade_enabled or self.crossfade_active:
             return
         app = None
@@ -1023,6 +1101,7 @@ class AudioEngine(GObject.Object):
                             break
 
     def on_eos(self, bus, msg):
+        """Handle end-of-stream events and transition to next track or stop playback."""
         app = None
         if hasattr(self, '_app_instance'):
             app = self._app_instance
@@ -1044,6 +1123,7 @@ class AudioEngine(GObject.Object):
             self.stop()
 
     def get_next_track(self, app):
+        """Select the next track to play according to shuffle/repeat settings."""
         if app.is_random:
             available_indices = list(range(app.store.get_n_items()))
             if app.random_history:
@@ -1063,14 +1143,17 @@ class AudioEngine(GObject.Object):
         return None
 
     def play_uri(self, uri: str):
+        """Start playback of the given URI on the player."""
         self.player.set_state(Gst.State.NULL)
         self.player.set_property("uri", uri)
         self.player.set_state(Gst.State.PLAYING)
 
     def play(self):
+        """Resume playback on the player."""
         self.player.set_state(Gst.State.PLAYING)
 
     def is_playing(self):
+        """Return True if the player is currently in the PLAYING state."""
         try:
             state = self.player.get_state(Gst.CLOCK_TIME_NONE).state
             return state == Gst.State.PLAYING
@@ -1078,18 +1161,22 @@ class AudioEngine(GObject.Object):
             return False
 
     def pause(self):
+        """Pause playback on the player."""
         self.player.set_state(Gst.State.PAUSED)
 
     def stop(self):
+        """Stop playback and set the player to NULL state."""
         self.player.set_state(Gst.State.NULL)
 
     def seek_percent(self, percent: float):
+        """Seek to a percentage of the track duration."""
         ok, duration = self.player.query_duration(Gst.Format.TIME)
         if ok and duration > 0:
             seek_pos = int((percent / 100.0) * duration)
             self.player.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, seek_pos)
 
     def query_position_percent(self) -> float:
+        """Return playback position as a percentage of total duration."""
         ok_pos, pos = self.player.query_position(Gst.Format.TIME)
         ok_dur, dur = self.player.query_duration(Gst.Format.TIME)
         if ok_pos and ok_dur and dur > 0:
@@ -1097,6 +1184,7 @@ class AudioEngine(GObject.Object):
         return 0.0
 
     def query_position(self) -> int:
+        """Return player's raw position value (in nanoseconds) or 0 on error."""
         try:
             ok_pos, pos = self.player.query_position(Gst.Format.TIME)
             if ok_pos:
@@ -1106,6 +1194,7 @@ class AudioEngine(GObject.Object):
             return 0
 
     def query_duration(self) -> int:
+        """Return player's raw duration value (in nanoseconds) or 0 on error."""
         try:
             ok_dur, dur = self.player.query_duration(Gst.Format.TIME)
             if ok_dur:
@@ -1115,6 +1204,7 @@ class AudioEngine(GObject.Object):
             return 0
 
     def set_volume(self, vol: float):
+        """Set the player volume and persist the value to configuration."""
         self.player.set_property("volume", vol)
         self.config.data["volume"] = vol
         self.config.save()
@@ -1137,12 +1227,14 @@ class PresetManager:
     """Helper class to find and load projectM presets and categorize them."""
 
     def __init__(self, preset_dir: Optional[str] = None, custom_preset_dir: Optional[str] = None):
+        """Initialize preset manager with system and custom preset directories."""
         self.preset_dir = preset_dir or self.find_preset_directory()
         self.custom_preset_dir = custom_preset_dir
         self.available_presets: List[str] = []
         self.preset_categories: Dict[str, List[str]] = {}
 
     def check_pulseaudio(self) -> bool:
+        """Return True if a projectM pulseaudio helper binary exists on the system."""
         return bool(shutil.which("projectM-pulseaudio")) or any(
             os.path.exists(p) for p in [
                 "/usr/bin/projectM-pulseaudio",
@@ -1152,6 +1244,7 @@ class PresetManager:
         )
 
     def find_preset_directory(self) -> str:
+        """Search common locations for projectM preset directories and return the first match."""
         preset_dirs = [
             "/usr/share/projectM/presets",
             "/usr/local/share/projectM/presets",
@@ -1204,6 +1297,7 @@ class PresetManager:
             self.create_embedded_presets()
 
     def create_embedded_presets(self) -> None:
+        """Populate a small set of built-in embedded presets when none are found on disk."""
         embedded_presets = [
             "Wave Form", "Spectrum Analyzer", "Circular Visual",
             "Particle Field", "Crystal Motion", "Flow State",
@@ -1218,6 +1312,7 @@ class PresetManager:
             self.preset_categories[category].append(preset)
 
     def categorize_preset(self, preset_name: str) -> str:
+        """Return a high-level category inferred from a preset name."""
         name_lower = preset_name.lower()
         if any(word in name_lower for word in ['wave', 'flow', 'fluid', 'liquid']):
             return "Flowing"
@@ -1232,12 +1327,14 @@ class PresetManager:
         elif any(word in name_lower for word in ['line', 'bar', 'spectrum', 'analyzer']):
             return "Analyzer"
         else:
-            return "Abstract"
+            return "Abstract."
 
 
 class ProjectMVisualizerWrapper:
+    """Compatibility wrapper to manage embedded projectM visualizer instances."""
 
     def check_pulseaudio(self):
+        """Check whether projectM pulseaudio helper exists on the system."""
         if shutil.which("projectM-pulseaudio"):
             return True
         common_paths = [
@@ -1251,11 +1348,11 @@ class ProjectMVisualizerWrapper:
         return False
 
     def find_preset_directory(self):
-        """Find projectM preset directory (deprecated on wrapper - use PresetManager)"""
+        """Find projectM preset directory (deprecated on wrapper - use PresetManager)."""
         return self.preset_manager.find_preset_directory()
 
     def load_presets(self):
-        """Load projectM presets from directory"""
+        """Load projectM presets from directory."""
         try:
             self.preset_categories = {}
             if os.path.exists(self.preset_dir):
@@ -1285,7 +1382,7 @@ class ProjectMVisualizerWrapper:
             self.create_embedded_presets()
 
     def create_embedded_presets(self):
-        """Create embedded preset list when no projectM presets available"""
+        """Create embedded preset list when no projectM presets available."""
         embedded_presets = [
             "Wave Form", "Spectrum Analyzer", "Circular Visual",
             "Particle Field", "Crystal Motion", "Flow State",
@@ -1300,7 +1397,7 @@ class ProjectMVisualizerWrapper:
             self.preset_categories[category].append(preset)
 
     def categorize_preset(self, preset_name):
-        """Categorize preset by name"""
+        """Categorize preset by name."""
         name_lower = preset_name.lower()
         if any(word in name_lower for word in ['wave', 'flow', 'fluid', 'liquid']):
             return "Flowing"
@@ -1318,6 +1415,7 @@ class ProjectMVisualizerWrapper:
             return "Abstract"
 
     def __init__(self):
+        """Initialize the ProjectM visualizer wrapper state."""
         self.projectm_process = None
         self.preset_manager = PresetManager()
         self.projectm_available = self.preset_manager.check_pulseaudio()
@@ -1375,6 +1473,7 @@ class ProjectMVisualizerWrapper:
             self.create_embedded_presets()
 
     def update_audio_levels(self, audio_levels, beat_detected=False):
+        """Forward audio level updates to the visualizer instance."""
         if self.visualizer and hasattr(self.visualizer, 'audio_data'):
             try:
                 audio_array = np.array(audio_levels, dtype=np.float32)
@@ -1402,6 +1501,7 @@ class ProjectMVisualizerWrapper:
                 logger.error(f"Error updating audio levels: {e}")
 
     def generate_projectm_texture(self, audio_levels, beat_detected=False):
+        """Generate or update an image/texture from projectM output for OpenGL use."""
         try:
             import time
             current_time = time.time()
@@ -1409,77 +1509,12 @@ class ProjectMVisualizerWrapper:
                 return
 
             self.texture_generation_time = current_time
-
-            # Create a dynamic texture based on audio data
             height, width = 256, 256
-            texture = np.zeros((height, width, 3), dtype=np.uint8)
 
-            # Use audio levels to create visualization
             if len(audio_levels) > 0:
-                # Create radial patterns based on audio
-                center_y, center_x = height // 2, width // 2
-                y, x = np.ogrid[:height, :width]
-
-                # Calculate distance from center
-                dist_from_center = np.sqrt((x - center_x)**2 + (y - center_y)**2)
-
-                # Use audio data to create patterns
-                audio_intensity = max(0.1, np.mean(audio_levels)) if audio_levels else 0.1
-                beat_factor = 2.0 if beat_detected else 1.0
-
-                # Create base color gradient
-                for i in range(height):
-                    for j in range(width):
-                        dist = dist_from_center[i, j]
-                        angle = np.arctan2(i - center_y, j - center_x)
-
-                        # Create swirling pattern
-                        swirl = np.sin(angle * 3 + current_time * 2) * 0.5 + 0.5
-                        wave = np.sin(dist * 0.1 + current_time * 3) * 0.5 + 0.5
-
-                        # Audio-reactive colors
-                        r = int(255 * audio_intensity * (0.5 + 0.5 * swirl))
-                        g = int(255 * audio_intensity * (0.5 + 0.5 * wave))
-                        b = int(255 * beat_factor * (0.5 + 0.5 * np.sin(current_time * 4)))
-
-                        texture[i, j] = [min(255, r), min(255, g), min(255, b)]
-
-                # Add frequency bars
-                for i in range(min(len(audio_levels), 32)):
-                    level = audio_levels[i] if i < len(audio_levels) else 0
-                    bar_height = int(level * height * 0.8)
-                    bar_x = int((i / 32.0) * width)
-
-                    for y in range(height - bar_height, height):
-                        if 0 <= bar_x < width and 0 <= y < height:
-                            # Frequency-based coloring
-                            hue = (i / 32.0) * 360
-                            color = self.hsv_to_rgb(hue / 360, 0.8, level)
-                            texture[y, bar_x] = [
-                                int(color[0] * 255),
-                                int(color[1] * 255),
-                                int(color[2] * 255)
-                            ]
-
-                # Add beat effects
-                if beat_detected:
-                    # Create expanding rings
-                    for ring in range(3):
-                        ring_radius = (current_time * 50 + ring * 30) % (width // 2)
-                        ring_mask = np.abs(dist_from_center - ring_radius) < 2
-                        texture[ring_mask] = [255, 255, 255]  # White rings for beats
-
+                texture = self._create_audio_reactive_texture(audio_levels, beat_detected, current_time, height, width)
             else:
-                # Fallback pattern when no audio
-                for i in range(height):
-                    for j in range(width):
-                        dist = np.sqrt((i - center_y)**2 + (j - center_x)**2)
-                        pattern = np.sin(dist * 0.1 + current_time) * 0.5 + 0.5
-                        texture[i, j] = [
-                            int(128 * pattern),
-                            int(64 * pattern),
-                            int(192 * pattern)
-                        ]
+                texture = self._create_fallback_texture(current_time, height, width)
 
             self.projectm_texture_data = texture
 
@@ -1488,50 +1523,143 @@ class ProjectMVisualizerWrapper:
             # Fallback to random texture
             self.projectm_texture_data = np.random.randint(0, 256, (256, 256, 3), dtype=np.uint8)
 
+    def _create_audio_reactive_texture(self, audio_levels, beat_detected, current_time, height, width):
+        """Create texture with audio-reactive patterns."""
+        texture = np.zeros((height, width, 3), dtype=np.uint8)
+        center_y, center_x = height // 2, width // 2
+        y, x = np.ogrid[:height, :width]
+        dist_from_center = np.sqrt((x - center_x)**2 + (y - center_y)**2)
+
+        audio_intensity = max(0.1, np.mean(audio_levels)) if audio_levels else 0.1
+        beat_factor = 2.0 if beat_detected else 1.0
+
+        # Create base swirling pattern
+        self._add_swirling_pattern(texture, audio_levels, audio_intensity, beat_factor,
+                                 current_time, height, width, center_y, center_x, y, x)
+
+        # Add frequency bars
+        self._add_frequency_bars(texture, audio_levels, height, width)
+
+        # Add beat effects if detected
+        if beat_detected:
+            self._add_beat_effects(texture, dist_from_center, current_time, width)
+
+        return texture
+
+    def _add_swirling_pattern(self, texture, audio_levels, audio_intensity, beat_factor,
+                             current_time, height, width, center_y, center_x, y, x):
+        """Add swirling audio-reactive pattern to texture."""
+        for i in range(height):
+            for j in range(width):
+                dist = np.sqrt((j - center_x)**2 + (i - center_y)**2)
+                angle = np.arctan2(i - center_y, j - center_x)
+
+                swirl = np.sin(angle * 3 + current_time * 2) * 0.5 + 0.5
+                wave = np.sin(dist * 0.1 + current_time * 3) * 0.5 + 0.5
+
+                r = int(255 * audio_intensity * (0.5 + 0.5 * swirl))
+                g = int(255 * audio_intensity * (0.5 + 0.5 * wave))
+                b = int(255 * beat_factor * (0.5 + 0.5 * np.sin(current_time * 4)))
+
+                texture[i, j] = [min(255, r), min(255, g), min(255, b)]
+
+    def _add_frequency_bars(self, texture, audio_levels, height, width):
+        """Add frequency visualization bars to texture."""
+        for i in range(min(len(audio_levels), 32)):
+            level = audio_levels[i] if i < len(audio_levels) else 0
+            bar_height = int(level * height * 0.8)
+            bar_x = int((i / 32.0) * width)
+
+            for y in range(height - bar_height, height):
+                if 0 <= bar_x < width and 0 <= y < height:
+                    hue = (i / 32.0) * 360
+                    color = self.hsv_to_rgb(hue / 360, 0.8, level)
+                    texture[y, bar_x] = [
+                        int(color[0] * 255),
+                        int(color[1] * 255),
+                        int(color[2] * 255)
+                    ]
+
+    def _add_beat_effects(self, texture, dist_from_center, current_time, width):
+        """Add beat detection effects to texture."""
+        # Create expanding rings
+        for ring in range(3):
+            ring_radius = (current_time * 50 + ring * 30) % (width // 2)
+            ring_mask = np.abs(dist_from_center - ring_radius) < 2
+            texture[ring_mask] = [255, 255, 255]  # White rings for beats
+
+    def _create_fallback_texture(self, current_time, height, width):
+        """Create fallback pattern when no audio data is available."""
+        texture = np.zeros((height, width, 3), dtype=np.uint8)
+        center_y, center_x = height // 2, width // 2
+
+        for i in range(height):
+            for j in range(width):
+                dist = np.sqrt((i - center_y)**2 + (j - center_x)**2)
+                pattern = np.sin(dist * 0.1 + current_time) * 0.5 + 0.5
+                texture[i, j] = [
+                    int(128 * pattern),
+                    int(64 * pattern),
+                    int(192 * pattern)
+                ]
+        return texture
+
     def on_button_press(self, gesture, n_press, x, y):
+        """Handle generic button press events on the visualization area."""
         pass
 
     def next_visualization_mode(self):
+        """Advance to the next GL visualization mode."""
         self.status_text = "GL Visualizer Mode"
         if self.visualizer:
             pass
 
     def next_projectm_preset(self):
+        """Switch to the next projectM preset in GL mode."""
         if self.visualizer:
             self.status_text = "Next Preset (GL Mode)"
 
     def previous_projectm_preset(self):
+        """Switch to the previous projectM preset in GL mode."""
         if self.visualizer:
             self.status_text = "Previous Preset (GL Mode)"
 
     def initialize_projectm(self):
+        """Initialize projectM visualizer if available."""
         if self.visualizer:
             self.status_text = "GL Visualizer Initialized"
 
     def stop_projectm(self):
+        """Stop an active projectM visualizer instance."""
         if self.visualizer:
             self.visualizer.running = False
             self.status_text = "GL Visualizer Stopped"
 
     def start_projectm(self):
+        """Start the projectM visualizer instance if available."""
         if self.visualizer:
             self.visualizer.running = True
             self.status_text = "GL Visualizer Started"
 
     def get_visualizer_mode_name(self):
+        """Return the name for the GL visualizer mode."""
         return "GL Visualizer"
 
     def get_color_scheme_name(self):
+        """Return the name of the default color scheme for GL visualizer."""
         return "Default"
 
     def queue_draw(self):
+        """Request redraw of the visualizer area asynchronously."""
         pass
 
 ProjectMVisualizer = ProjectMVisualizerWrapper
 
 class Linamp(Gtk.Application):
+    """Main application class that wires UI, audio, and visualizers."""
 
     def __init__(self):
+        """Initialize the Linamp application and its internal state."""
         super().__init__(application_id="com.example.gamp")
         try:
             self.config = Config()
@@ -1599,6 +1727,7 @@ class Linamp(Gtk.Application):
             raise
 
     def on_selection_changed(self, selection, param):
+        """Handle selection changes in playlist or UI lists."""
         try:
             selected_item = selection.get_selected_item()
             if selected_item:
@@ -1623,6 +1752,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Error loading saved playlist: {e}")
 
     def do_activate(self):
+        """Activate the application and create or show the main window."""
         try:
             win = self.props.active_window
             if not win:
@@ -1635,6 +1765,7 @@ class Linamp(Gtk.Application):
             self._show_error_dialog(f"Failed to start application: {e}")
 
     def on_window_close(self, window=None, *args):
+        """Handle window close and persist window state if necessary."""
         try:
             width, height = window.get_default_size()
             self.config.data["window_width"] = width
@@ -1669,11 +1800,13 @@ class Linamp(Gtk.Application):
         return win
 
     def add_section_separator(self, parent_box):
+        """Insert a visual separator between UI sections."""
         separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
         separator.add_css_class("section-separator")
         parent_box.append(separator)
 
     def build_ui(self, win: Gtk.ApplicationWindow):
+        """Construct the main application UI within the given window."""
         try:
             main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             win.set_child(main_box)
@@ -1724,7 +1857,7 @@ class Linamp(Gtk.Application):
             raise
 
     def _initialize_synthetic_audio(self):
-        """Initialize synthetic audio data for visualization testing"""
+        """Initialize synthetic audio data for visualization testing."""
         try:
             logger.info("Initializing synthetic audio data for visualization")
             # Initialize with some default audio levels
@@ -1742,6 +1875,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Failed to initialize synthetic audio: {e}")
 
     def on_volume_changed(self, scale):
+        """Handle volume changes from the UI slider."""
         try:
             volume = scale.get_value() / 100.0
             if hasattr(self, 'audio') and self.audio:
@@ -1754,6 +1888,7 @@ class Linamp(Gtk.Application):
             self._show_error_dialog(f"Failed to change volume: {e}")
 
     def create_playback_controls(self, parent):
+        """Create playback buttons and related controls in the UI."""
         try:
             controls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
             controls_box.set_halign(Gtk.Align.CENTER)
@@ -1793,61 +1928,99 @@ class Linamp(Gtk.Application):
             raise
 
     def _on_key_pressed(self, controller, keyval, keycode, state):
+        """Handle keyboard shortcuts for media control."""
         try:
             keyname = Gdk.keyval_name(keyval).lower()
             ctrl = (state & Gdk.ModifierType.CONTROL_MASK)
-            if keyname == 'space':
-                if hasattr(self, 'audio'):
-                    if self.audio.is_playing():
-                        self.audio.pause()
-                    else:
-                        self.audio.play()
+
+            # Handle different key categories
+            if self._handle_playback_keys(keyname):
                 return True
-            elif keyname == 'right' or keyname == 'n':
-                self.next_track()
+            elif self._handle_navigation_keys(keyname):
                 return True
-            elif keyname == 'left' or keyname == 'p':
-                self.previous_track()
+            elif self._handle_volume_keys(keyname):
                 return True
-            elif keyname == 'up':
-                self.adjust_volume(0.1)
+            elif self._handle_seek_keys(keyname):
                 return True
-            elif keyname == 'down':
-                self.adjust_volume(-0.1)
+            elif self._handle_special_keys(keyname, ctrl):
                 return True
-            elif keyname == 'f':
-                self.seek_relative(5)
-                return True
-            elif keyname == 'b':
-                self.seek_relative(-5)
-                return True
-            elif keyname == 'f11':
-                win = self.props.active_window
-                if win.is_fullscreen():
-                    win.unfullscreen()
-                else:
-                    win.fullscreen()
-                return True
-            elif keyname == 'q' and ctrl:
-                self.quit()
-                return True
-            elif keyname == 'v':
-                self.next_visualization_mode()
-                return True
-            elif keyname == 'f' and ctrl:
-                if hasattr(self, 'audio'):
-                    if self.audio.crossfade_enabled:
-                        self.audio.disable_crossfade()
-                        self.status_text = "Crossfade: OFF"
-                        logger.info("Crossfade disabled")
-                    else:
-                        self.audio.enable_crossfade()
-                        self.status_text = "Crossfade: ON"
-                        logger.info("Crossfade enabled")
-                return True
+
         except Exception as e:
             logger.error(f"Error in key handler: {e}")
         return False
+
+    def _handle_playback_keys(self, keyname):
+        """Handle playback control keys."""
+        if keyname == 'space':
+            if hasattr(self, 'audio'):
+                if self.audio.is_playing():
+                    self.audio.pause()
+                else:
+                    self.audio.play()
+            return True
+        return False
+
+    def _handle_navigation_keys(self, keyname):
+        """Handle track navigation keys."""
+        if keyname == 'right' or keyname == 'n':
+            self.next_track()
+            return True
+        elif keyname == 'left' or keyname == 'p':
+            self.previous_track()
+            return True
+        return False
+
+    def _handle_volume_keys(self, keyname):
+        """Handle volume control keys."""
+        if keyname == 'up':
+            self.adjust_volume(0.1)
+            return True
+        elif keyname == 'down':
+            self.adjust_volume(-0.1)
+            return True
+        return False
+
+    def _handle_seek_keys(self, keyname):
+        """Handle seek control keys."""
+        if keyname == 'f':
+            self.seek_relative(5)
+            return True
+        elif keyname == 'b':
+            self.seek_relative(-5)
+            return True
+        return False
+
+    def _handle_special_keys(self, keyname, ctrl):
+        """Handle special function keys."""
+        if keyname == 'f11':
+            win = self.props.active_window
+            if win.is_fullscreen():
+                win.unfullscreen()
+            else:
+                win.fullscreen()
+            return True
+        elif keyname == 'q' and ctrl:
+            self.quit()
+            return True
+        elif keyname == 'v':
+            self.next_visualization_mode()
+            return True
+        elif keyname == 'f' and ctrl:
+            self._toggle_crossfade()
+            return True
+        return False
+
+    def _toggle_crossfade(self):
+        """Toggle crossfade on/off and update status."""
+        if hasattr(self, 'audio'):
+            if self.audio.crossfade_enabled:
+                self.audio.disable_crossfade()
+                self.status_text = "Crossfade: OFF"
+                logger.info("Crossfade disabled")
+            else:
+                self.audio.enable_crossfade()
+                self.status_text = "Crossfade: ON"
+                logger.info("Crossfade enabled")
 
     def _setup_keyboard_shortcuts(self, win: Gtk.ApplicationWindow):
         try:
@@ -1858,6 +2031,7 @@ class Linamp(Gtk.Application):
             logger.warning(f"Failed to setup keyboard shortcuts: {e}")
 
     def show_status_message(self, message, timeout=3):
+        """Display a transient status message in the UI status bar."""
         if hasattr(self, 'status_bar'):
             self.status_bar.set_text(message)
             if hasattr(self, '_status_timeout_id') and self._status_timeout_id is not None:
@@ -1873,6 +2047,7 @@ class Linamp(Gtk.Application):
         return False
 
     def render_textured_quad(self):
+        """Render a fullscreen textured quad using the current GL texture."""
         try:
             gl.glEnable(gl.GL_TEXTURE_2D)
             gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture_id)
@@ -1902,6 +2077,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Failed to render textured quad: {e}")
 
     def render_fallback_visualization(self, gl):
+        """Render a non-OpenGL fallback visualization using CPU drawing."""
         try:
             if hasattr(self, 'shader_program') and self.shader_program:
                 gl.glUseProgram(self.shader_program)
@@ -1952,6 +2128,7 @@ class Linamp(Gtk.Application):
             self.render_static_fallback(gl)
 
     def render_static_fallback(self, gl):
+        """Render a static fallback pattern when no real visualizer is available."""
         try:
             pulse = (math.sin(time.time() * 2) + 1.0) * 0.5
             radius = 0.3 + pulse * 0.1
@@ -1990,6 +2167,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Static fallback failed: {e}")
 
     def initialize_projectm(self):
+        """Initialize projectM resources and fallback visualizers as needed."""
         try:
             self.projectm_available = self.start_embedded_external_projectm()
             if self.projectm_available:
@@ -2002,6 +2180,7 @@ class Linamp(Gtk.Application):
             return False
 
     def init_particle_systems(self):
+        """Initialize default particle systems used by particle visualizations."""
         self.particle_systems = [
             {
                 'particles': [],
@@ -2020,6 +2199,7 @@ class Linamp(Gtk.Application):
         ]
 
     def start_embedded_external_projectm(self):
+        """Attempt to start a minimal external projectM process for embedded mode."""
         try:
             self.visualization_mode = 0
             self.visualization_modes = [
@@ -2040,6 +2220,7 @@ class Linamp(Gtk.Application):
             return False
 
     def update_audio_levels(self, audio_levels, beat_detected):
+        """Update internal audio level buffers and trigger visualization redraw."""
         try:
             self.audio_levels = audio_levels
             self.beat_detected = beat_detected
@@ -2066,87 +2247,30 @@ class Linamp(Gtk.Application):
             logger.error(f"Failed to update audio levels: {e}")
 
     def on_draw(self, area, cr, width, height, user_data=None):
+        """Handle draw callback for the visualizer area and render the scene."""
         try:
-            # If width or height is 0, nothing to draw
+            # Early exit for invalid dimensions
             if width <= 0 or height <= 0:
                 return
 
-            current_time = time.time() * 1000
-            logger.debug(f"on_draw called - dimensions: {width}x{height}, visualization_mode: {self.visualization_mode}")
-
             # Frame rate limiting
+            current_time = time.time() * 1000
             if current_time - self.last_frame_time < self.frame_interval:
                 return
             self.last_frame_time = current_time
 
-            # Clear the background
-            cr.set_source_rgb(0.1, 0.1, 0.1)  # Dark background
-            cr.paint()
+            logger.debug(f"on_draw called - dimensions: {width}x{height}, visualization_mode: {self.visualization_mode}")
 
-            # Ensure we have audio data to visualize
-            if not hasattr(self, 'audio_levels') or len(self.audio_levels) == 0:
-                logger.warning("No audio levels available for visualization - initializing with defaults")
-                self.audio_levels = [0.2] * VISUALIZATION_BARS
-                self.smoothed_levels = [0.2] * VISUALIZATION_BARS
+            # Initialize and prepare drawing surface
+            self._prepare_drawing_surface(cr, width, height)
 
-            # Generate audio levels if needed
-            if hasattr(self, 'audio') and self.audio:
-                try:
-                    if hasattr(self.audio, 'player') and self.audio.player:
-                        if self.audio.player.get_state(Gst.CLOCK_TIME_NONE).state == Gst.State.PLAYING:
-                            current_position = self.audio.player.query_position(Gst.Format.TIME)[1] / Gst.SECOND
-                            self.audio.generate_audio_levels(current_position)
-                            logger.debug(f"Generated real audio levels for position {current_position:.2f}")
-                        else:
-                            # Use synthetic data when not playing
-                            if not hasattr(self, '_synthetic_audio_time'):
-                                self._synthetic_audio_time = 0.0
-                            self._synthetic_audio_time += 0.016  # ~60fps
-                            self.audio.generate_audio_levels(self._synthetic_audio_time)
-                            logger.debug(f"Generated synthetic audio levels at time {self._synthetic_audio_time:.2f}")
-                    else:
-                        # No player yet, use synthetic data
-                        if not hasattr(self, '_synthetic_audio_time'):
-                            self._synthetic_audio_time = 0.0
-                        self._synthetic_audio_time += 0.016
-                        self.audio.generate_audio_levels(self._synthetic_audio_time)
-                except Exception as e:
-                    logger.debug(f"Could not get player state, using synthetic data: {e}")
-                    if not hasattr(self, '_synthetic_audio_time'):
-                        self._synthetic_audio_time = 0.0
-                    self._synthetic_audio_time += 0.016
-                    self.audio.generate_audio_levels(self._synthetic_audio_time)
-            else:
-                # No audio engine, create simple synthetic data
-                if not hasattr(self, 'audio_levels') or len(self.audio_levels) == 0:
-                    self.audio_levels = [0.3] * VISUALIZATION_BARS
-                    self.smoothed_levels = [0.3] * VISUALIZATION_BARS
+            # Ensure and update audio data
+            self._ensure_and_update_audio_data()
 
-                # Simple synthetic animation
-                if not hasattr(self, '_synthetic_audio_time'):
-                    self._synthetic_audio_time = 0.0
-                self._synthetic_audio_time += 0.016
-                for i in range(len(self.audio_levels)):
-                    level = 0.3 + 0.2 * math.sin(self._synthetic_audio_time * 2 + i * 0.3)
-                    self.audio_levels[i] = max(0.1, level)
-                    self.smoothed_levels[i] = self.audio_levels[i]
+            # Update animation state
+            self._update_animation_state()
 
-            # Update smoothed levels
-            smoothing_factor = 0.3
-            for i in range(len(self.audio_levels)):
-                if i < len(self.smoothed_levels):
-                    self.smoothed_levels[i] = (1 - smoothing_factor) * self.smoothed_levels[i] + smoothing_factor * self.audio_levels[i]
-                else:
-                    self.smoothed_levels.append(self.audio_levels[i])
-
-            # Update animation phase for dynamic effects
-            if hasattr(self, 'animation_phase'):
-                self.animation_phase += 0.016  # ~60fps animation timing
-            else:
-                self.animation_phase = 0.0
-
-            # Render the current visualization mode
-            logger.debug(f"Rendering visualization mode {self.visualization_mode}")
+            # Render the visualization
             self._render_current_visualization(cr, width, height)
 
             # Add status overlay
@@ -2156,15 +2280,97 @@ class Linamp(Gtk.Application):
 
         except Exception as e:
             logger.error(f"Error in on_draw: {e}", exc_info=True)
-            # Try to draw a fallback pattern
-            try:
-                self._draw_error_fallback(cr, width, height, str(e))
-            except Exception:
-                logger.critical("Even fallback visualization failed", exc_info=True)
-                pass  # If even fallback fails, just return
+            self._handle_draw_error(cr, width, height, e)
+
+    def _prepare_drawing_surface(self, cr, width, height):
+        """Prepare the drawing surface with background."""
+        cr.set_source_rgb(0.1, 0.1, 0.1)  # Dark background
+        cr.paint()
+
+    def _ensure_and_update_audio_data(self):
+        """Ensure audio data exists and update it based on player state."""
+        # Initialize audio levels if needed
+        if not hasattr(self, 'audio_levels') or len(self.audio_levels) == 0:
+            logger.warning("No audio levels available for visualization - initializing with defaults")
+            self.audio_levels = [0.2] * VISUALIZATION_BARS
+            self.smoothed_levels = [0.2] * VISUALIZATION_BARS
+
+        # Update audio levels based on player state
+        if hasattr(self, 'audio') and self.audio:
+            self._update_audio_from_player()
+        else:
+            self._update_synthetic_audio()
+
+        # Apply smoothing to audio levels
+        self._apply_audio_smoothing()
+
+    def _update_audio_from_player(self):
+        """Update audio levels from the actual player."""
+        try:
+            if hasattr(self.audio, 'player') and self.audio.player:
+                if self.audio.player.get_state(Gst.CLOCK_TIME_NONE).state == Gst.State.PLAYING:
+                    current_position = self.audio.player.query_position(Gst.Format.TIME)[1] / Gst.SECOND
+                    self.audio.generate_audio_levels(current_position)
+                    logger.debug(f"Generated real audio levels for position {current_position:.2f}")
+                else:
+                    self._update_synthetic_audio_when_not_playing()
+            else:
+                self._update_synthetic_audio()
+        except Exception as e:
+            logger.debug(f"Could not get player state, using synthetic data: {e}")
+            self._update_synthetic_audio()
+
+    def _update_synthetic_audio_when_not_playing(self):
+        """Update synthetic audio data when player is not playing."""
+        if not hasattr(self, '_synthetic_audio_time'):
+            self._synthetic_audio_time = 0.0
+        self._synthetic_audio_time += 0.016  # ~60fps
+        self.audio.generate_audio_levels(self._synthetic_audio_time)
+        logger.debug(f"Generated synthetic audio levels at time {self._synthetic_audio_time:.2f}")
+
+    def _update_synthetic_audio(self):
+        """Update synthetic audio data when no player is available."""
+        # Initialize audio levels if needed
+        if not hasattr(self, 'audio_levels') or len(self.audio_levels) == 0:
+            self.audio_levels = [0.3] * VISUALIZATION_BARS
+            self.smoothed_levels = [0.3] * VISUALIZATION_BARS
+
+        # Create simple synthetic animation
+        if not hasattr(self, '_synthetic_audio_time'):
+            self._synthetic_audio_time = 0.0
+        self._synthetic_audio_time += 0.016
+
+        for i in range(len(self.audio_levels)):
+            level = 0.3 + 0.2 * math.sin(self._synthetic_audio_time * 2 + i * 0.3)
+            self.audio_levels[i] = max(0.1, level)
+            self.smoothed_levels[i] = self.audio_levels[i]
+
+    def _apply_audio_smoothing(self):
+        """Apply smoothing filter to audio levels."""
+        smoothing_factor = 0.3
+        for i in range(len(self.audio_levels)):
+            if i < len(self.smoothed_levels):
+                self.smoothed_levels[i] = (1 - smoothing_factor) * self.smoothed_levels[i] + smoothing_factor * self.audio_levels[i]
+            else:
+                self.smoothed_levels.append(self.audio_levels[i])
+
+    def _update_animation_state(self):
+        """Update animation phase for dynamic effects."""
+        if hasattr(self, 'animation_phase'):
+            self.animation_phase += 0.016  # ~60fps animation timing
+        else:
+            self.animation_phase = 0.0
+
+    def _handle_draw_error(self, cr, width, height, error):
+        """Handle drawing errors with fallback visualization."""
+        try:
+            self._draw_error_fallback(cr, width, height, str(error))
+        except Exception:
+            logger.critical("Even fallback visualization failed", exc_info=True)
+            pass  # If even fallback fails, just return
 
     def _draw_test_pattern(self, cr, width, height):
-        """Draw a simple test pattern when no audio data is available"""
+        """Draw a simple test pattern when no audio data is available."""
         logger.info("Drawing test pattern for visualization")
 
         # Ensure we have some basic audio levels for visualization
@@ -2207,56 +2413,74 @@ class Linamp(Gtk.Application):
         cr.show_text(text)
 
     def _render_current_visualization(self, cr, width, height):
-        """Render the current visualization mode"""
+        """Render the current visualization mode."""
         try:
             logger.debug(f"Rendering visualization mode {self.visualization_mode}")
+            self._log_visualization_debug_info()
+            self._ensure_visualization_data()
 
-            # Add debug output to file
-            with open('/tmp/viz_debug.log', 'a') as f:
-                f.write(f"Rendering mode {self.visualization_mode} with {len(self.smoothed_levels)} levels\n")
+            # Render based on current mode
+            self._render_by_mode(cr, width, height)
 
-            # Ensure we have valid data
-            if not hasattr(self, 'smoothed_levels') or len(self.smoothed_levels) == 0:
-                self.smoothed_levels = [0.3] * VISUALIZATION_BARS
-                self.audio_levels = [0.3] * VISUALIZATION_BARS
-
-            if self.visualization_mode == 0:
-                self.draw_enhanced_frequency_bars(cr, width, height)
-            elif self.visualization_mode == 1:
-                self.draw_enhanced_waveform(cr, width, height)
-            elif self.visualization_mode == 2:
-                self.draw_circular_visualization(cr, width, height)
-            elif self.visualization_mode == 3:
-                self.draw_spectrum_visualization(cr, width, height)
-            elif self.visualization_mode == 4:
-                self.draw_particle_visualization(cr, width, height)
-            elif self.visualization_mode == 5:
-                self.draw_abstract_visualization(cr, width, height)
-            elif self.visualization_mode == 6:
-                self.draw_projectm_preset_info(cr, width, height)
-            else:
-                # Fallback to mode 0 if invalid mode
-                logger.warning(f"Invalid visualization mode {self.visualization_mode}, falling back to mode 0")
-                self.visualization_mode = 0
-                self.draw_enhanced_frequency_bars(cr, width, height)
-
-            # Update particles if needed
+            # Update particles for advanced modes
             if self.visualization_mode >= 4:
                 self.update_and_draw_particles(cr, width, height)
 
-            # Debug: Add mode indicator
-            cr.set_source_rgb(1, 1, 1)
-            cr.set_font_size(12)
-            cr.move_to(10, height - 10)
-            cr.show_text(f"Mode: {self.visualization_mode}")
+            # Add debug overlay
+            self._add_mode_overlay(cr, width, height)
 
         except Exception as e:
             logger.error(f"Failed to render visualization mode {self.visualization_mode}: {e}")
-            # Fallback to simple bars
-            self._draw_simple_bars_fallback(cr, width, height)
+            self._fallback_to_simple_bars(cr, width, height)
+
+    def _log_visualization_debug_info(self):
+        """Log debug information about visualization rendering."""
+        with open('/tmp/viz_debug.log', 'a') as f:
+            f.write(f"Rendering mode {self.visualization_mode} with {len(self.smoothed_levels)} levels\n")
+
+    def _ensure_visualization_data(self):
+        """Ensure visualization data is available."""
+        if not hasattr(self, 'smoothed_levels') or len(self.smoothed_levels) == 0:
+            self.smoothed_levels = [0.3] * VISUALIZATION_BARS
+            self.audio_levels = [0.3] * VISUALIZATION_BARS
+
+    def _render_by_mode(self, cr, width, height):
+        """Render visualization based on current mode."""
+        mode_renderers = {
+            0: self.draw_enhanced_frequency_bars,
+            1: self.draw_enhanced_waveform,
+            2: self.draw_circular_visualization,
+            3: self.draw_spectrum_visualization,
+            4: self.draw_particle_visualization,
+            5: self.draw_abstract_visualization,
+            6: self.draw_projectm_preset_info
+        }
+
+        renderer = mode_renderers.get(self.visualization_mode)
+        if renderer:
+            renderer(cr, width, height)
+        else:
+            self._handle_invalid_mode(cr, width, height)
+
+    def _handle_invalid_mode(self, cr, width, height):
+        """Handle invalid visualization mode by falling back to mode 0."""
+        logger.warning(f"Invalid visualization mode {self.visualization_mode}, falling back to mode 0")
+        self.visualization_mode = 0
+        self.draw_enhanced_frequency_bars(cr, width, height)
+
+    def _add_mode_overlay(self, cr, width, height):
+        """Add mode indicator overlay."""
+        cr.set_source_rgb(1, 1, 1)
+        cr.set_font_size(12)
+        cr.move_to(10, height - 10)
+        cr.show_text(f"Mode: {self.visualization_mode}")
+
+    def _fallback_to_simple_bars(self, cr, width, height):
+        """Fallback to simple bars visualization on error."""
+        self._draw_simple_bars_fallback(cr, width, height)
 
     def _draw_status_overlay(self, cr, width, height):
-        """Draw status information overlay"""
+        """Draw status information overlay."""
         try:
             # Background for status text
             cr.set_source_rgba(0, 0, 0, 0.7)
@@ -2296,7 +2520,7 @@ class Linamp(Gtk.Application):
             logger.debug(f"Failed to draw status overlay: {e}")
 
     def _draw_error_fallback(self, cr, width, height, error_msg):
-        """Draw error fallback pattern"""
+        """Draw error fallback pattern."""
         try:
             # Dark blue background instead of red
             cr.set_source_rgb(0.1, 0.1, 0.2)
@@ -2343,7 +2567,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Even error fallback failed: {e}")
 
     def _draw_simple_bars_fallback(self, cr, width, height):
-        """Simple bar fallback when visualization fails"""
+        """Draw simple bars as a fallback when visualization fails."""
         try:
             if not hasattr(self, 'audio_levels') or len(self.audio_levels) == 0:
                 return
@@ -2367,7 +2591,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Simple bars fallback failed: {e}")
 
     def _trigger_visualizer_redraw(self):
-        """Trigger a visualizer redraw from the main thread"""
+        """Trigger a visualizer redraw from the main thread."""
         try:
             if hasattr(self, 'drawing_area') and self.drawing_area:
                 logger.debug("Triggering visualizer redraw from main thread")
@@ -2379,6 +2603,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Failed to trigger visualizer redraw: {e}")
 
     def draw_projectm_preset_info(self, cr, width, height):
+        """Draw projectM preset info and texture on the drawing surface."""
         # Draw projectM texture if available
         if hasattr(self, 'projectm_visualizer') and hasattr(self.projectm_visualizer, 'projectm_texture_data') and self.projectm_visualizer.projectm_texture_data is not None:
             try:
@@ -2431,6 +2656,7 @@ class Linamp(Gtk.Application):
             self._draw_projectm_fallback_text(cr, width, height)
 
     def _draw_projectm_fallback_text(self, cr, width, height):
+        """Draw fallback text when projectM texture is unavailable."""
         if hasattr(self, 'current_preset_index') and self.current_preset_index < len(self.available_presets):
             current_preset = self.available_presets[self.current_preset_index]
             category = self.categorize_preset(current_preset)
@@ -2487,59 +2713,84 @@ class Linamp(Gtk.Application):
             cr.show_text(text)
 
     def update_visualizer(self):
+        """Update visualizer state and schedule redraws."""
         try:
             logger.debug(f"Visualizer update called - visualizer: {self.visualizer}")
 
-            # Always update synthetic audio time for animation when not playing
-            if not hasattr(self, '_synthetic_audio_time'):
-                self._synthetic_audio_time = 0.0
-            self._synthetic_audio_time += 0.016  # ~60fps
+            # Update synthetic audio timing
+            self._update_synthetic_timing()
 
-            # Generate synthetic audio levels when not playing real audio
-            if hasattr(self, 'audio') and self.audio:
-                try:
-                    if hasattr(self.audio, 'player') and self.audio.player:
-                        if self.audio.player.get_state(Gst.CLOCK_TIME_NONE).state != Gst.State.PLAYING:
-                            self.audio.generate_audio_levels(self._synthetic_audio_time)
-                    else:
-                        # No player yet, use synthetic data
-                        self.audio.generate_audio_levels(self._synthetic_audio_time)
-                except Exception:
-                    # If we can't get player state, use synthetic data
-                    self.audio.generate_audio_levels(self._synthetic_audio_time)
-            else:
-                # No audio engine, create simple synthetic data
-                if not hasattr(self, 'audio_levels'):
-                    self.audio_levels = [0.3] * VISUALIZATION_BARS
-                    self.smoothed_levels = [0.3] * VISUALIZATION_BARS
+            # Update audio levels based on player state
+            self._update_audio_levels_for_visualizer()
 
-                # Simple synthetic animation
-                import math
-                for i in range(len(self.audio_levels)):
-                    level = 0.3 + 0.2 * math.sin(self._synthetic_audio_time * 2 + i * 0.3)
-                    self.audio_levels[i] = max(0.1, level)
-                    self.smoothed_levels[i] = self.audio_levels[i]
+            # Trigger visualizer redraws
+            self._trigger_visualizer_redraws()
 
-            if self.visualizer:
-                logger.debug("Calling queue_draw on visualizer")
-                self.visualizer.queue_draw()
-                # Also trigger redraw if we have a drawing area
-                if hasattr(self, 'drawing_area') and self.drawing_area:
-                    logger.debug("Triggering drawing area redraw")
-                    self.drawing_area.queue_draw()
-            else:
-                logger.warning("No visualizer reference found")
-                # Try to trigger redraw on the visualizer section
-                if hasattr(self, 'drawing_area') and self.drawing_area:
-                    logger.debug("Fallback: triggering drawing area redraw")
-                    self.drawing_area.queue_draw()
-            return True
         except Exception as e:
             logger.error(f"Failed to update visualizer: {e}")
-            # Don't return False - keep the timer running
-            return True
+            return True  # Keep timer running even on error
+
+    def _update_synthetic_timing(self):
+        """Update synthetic audio timing for animations."""
+        if not hasattr(self, '_synthetic_audio_time'):
+            self._synthetic_audio_time = 0.0
+        self._synthetic_audio_time += 0.016  # ~60fps
+
+    def _update_audio_levels_for_visualizer(self):
+        """Update audio levels based on player state for visualization."""
+        if hasattr(self, 'audio') and self.audio:
+            self._update_from_real_audio_player()
+        else:
+            self._update_from_synthetic_audio()
+
+    def _update_from_real_audio_player(self):
+        """Update audio levels from real audio player."""
+        try:
+            if hasattr(self.audio, 'player') and self.audio.player:
+                if self.audio.player.get_state(Gst.CLOCK_TIME_NONE).state != Gst.State.PLAYING:
+                    self.audio.generate_audio_levels(self._synthetic_audio_time)
+                else:
+                    pass  # Player is playing, let it handle real audio
+            else:
+                # No player yet, use synthetic data
+                self.audio.generate_audio_levels(self._synthetic_audio_time)
+        except Exception:
+            # If we can't get player state, use synthetic data
+            self.audio.generate_audio_levels(self._synthetic_audio_time)
+
+    def _update_from_synthetic_audio(self):
+        """Update audio levels from synthetic audio source."""
+        # Initialize audio levels if needed
+        if not hasattr(self, 'audio_levels'):
+            self.audio_levels = [0.3] * VISUALIZATION_BARS
+            self.smoothed_levels = [0.3] * VISUALIZATION_BARS
+
+        # Create simple synthetic animation
+        import math
+        for i in range(len(self.audio_levels)):
+            level = 0.3 + 0.2 * math.sin(self._synthetic_audio_time * 2 + i * 0.3)
+            self.audio_levels[i] = max(0.1, level)
+            self.smoothed_levels[i] = self.audio_levels[i]
+
+    def _trigger_visualizer_redraws(self):
+        """Trigger redraws on visualizer and drawing area."""
+        if self.visualizer:
+            logger.debug("Calling queue_draw on visualizer")
+            self.visualizer.queue_draw()
+
+            # Also trigger redraw if we have a drawing area
+            if hasattr(self, 'drawing_area') and self.drawing_area:
+                logger.debug("Triggering drawing area redraw")
+                self.drawing_area.queue_draw()
+        else:
+            logger.warning("No visualizer reference found")
+            # Try to trigger redraw on the visualizer section
+            if hasattr(self, 'drawing_area') and self.drawing_area:
+                logger.debug("Fallback: triggering drawing area redraw")
+                self.drawing_area.queue_draw()
 
     def draw_projectm_background(self, cr, width, height):
+        """Render a subtle background based on smoothed audio levels."""
         if len(self.smoothed_levels) > 0:
             for i in range(0, len(self.smoothed_levels), 4):
                 level = self.smoothed_levels[i]
@@ -2553,6 +2804,7 @@ class Linamp(Gtk.Application):
                     cr.fill()
 
     def draw_enhanced_frequency_bars(self, cr, width, height):
+        """Render enhanced frequency bars with gradients and glow effects."""
         bar_width = width / self.bars
         margin = bar_width * 0.15
         color_scheme = self.get_color_scheme_colors()
@@ -2588,6 +2840,7 @@ class Linamp(Gtk.Application):
                 cr.fill()
 
     def draw_enhanced_waveform(self, cr, width, height):
+        """Render layered waveforms for an enhanced waveform visualization."""
         self.draw_waveform_layer(cr, width, height, 0.8, 2.0, 0.3)
         self.draw_waveform_layer(cr, width, height, 0.5, 4.0, 0.5)
         self.draw_waveform_layer(cr, width, height, 0.3, 8.0, 0.8)
@@ -2598,6 +2851,7 @@ class Linamp(Gtk.Application):
         cr.stroke()
 
     def draw_waveform_layer(self, cr, width, height, amplitude, frequency, alpha):
+        """Draw a single waveform layer with given amplitude, frequency, and alpha."""
         color_scheme = self.get_color_scheme_colors()
         base_color = color_scheme[int(self.animation_phase * 10) % len(color_scheme)]
         cr.set_source_rgba(base_color[0], base_color[1], base_color[2], alpha)
@@ -2616,6 +2870,7 @@ class Linamp(Gtk.Application):
         cr.stroke()
 
     def draw_spectrum_visualization(self, cr, width, height):
+        """Render a circular spectrum visualization using smoothed levels."""
         center_x = width / 2
         center_y = height / 2
         radius = min(width, height) * 0.4
@@ -2638,6 +2893,7 @@ class Linamp(Gtk.Application):
                 cr.stroke()
 
     def draw_particle_visualization(self, cr, width, height):
+        """Render particle systems driven by audio levels."""
         center_x = width / 2
         center_y = height / 2
         self.generate_particles(center_x, center_y, width, height)
@@ -2652,6 +2908,7 @@ class Linamp(Gtk.Application):
                 cr.fill()
 
     def draw_abstract_visualization(self, cr, width, height):
+        """Render an abstract flowing visualization combining curves and audio."""
         num_curves = 8
         color_scheme = self.get_color_scheme_colors()
         for curve in range(num_curves):
@@ -2670,6 +2927,7 @@ class Linamp(Gtk.Application):
             cr.stroke()
 
     def get_color_scheme_colors(self):
+        """Return RGB color tuples for the current color scheme."""
         if self.color_scheme == 0:
             return [(0.2, 0.6, 1.0), (0.1, 0.8, 0.9), (0.3, 0.9, 0.7),
                    (0.8, 0.9, 0.3), (1.0, 0.7, 0.2), (1.0, 0.4, 0.2)]
@@ -2687,6 +2945,7 @@ class Linamp(Gtk.Application):
                    (0.9, 0.8, 0.6), (0.9, 0.6, 0.8)]
 
     def generate_particles(self, center_x, center_y, width, height):
+        """Spawn and update particles for all particle systems."""
         for system in self.particle_systems:
             avg_level = sum(self.smoothed_levels) / len(self.smoothed_levels)
             birth_rate = int(system['birth_rate'] * (1 + avg_level))
@@ -2712,6 +2971,7 @@ class Linamp(Gtk.Application):
                     system['particles'].remove(particle)
 
     def draw_circular_visualization(self, cr, width, height):
+        """Render the circular visualization variant."""
         center_x = width / 2
         center_y = height / 2
         max_radius = min(width, height) * 0.45
@@ -2744,6 +3004,7 @@ class Linamp(Gtk.Application):
         cr.fill()
 
     def draw_beat_indicator(self, cr, width, height):
+        """Draw a small visual beat indicator in the corner."""
         pulse_size = 20 + (10 if self.beat_detected else 0)
         alpha = 0.8 + (0.2 if self.beat_detected else 0)
         cr.set_source_rgba(1.0, 1.0, 1.0, alpha)
@@ -2761,6 +3022,7 @@ class Linamp(Gtk.Application):
         cr.show_text("♪ BEAT")
 
     def draw_enhanced_status_overlay(self, cr, width, height):
+        """Draw the status area overlay showing mode and presets."""
         status_height = 70
         y_offset = height - status_height - 5
         gradient = cairo.LinearGradient(0, y_offset, 0, height)
@@ -2798,6 +3060,7 @@ class Linamp(Gtk.Application):
         cr.show_text(instructions)
 
     def update_and_draw_particles(self, cr, width, height):
+        """Update particle states and render their trails and shapes."""
         for system in self.particle_systems:
             for particle in system['particles'][:]:
                 particle['vy'] += 0.1
@@ -2835,6 +3098,7 @@ class Linamp(Gtk.Application):
                         cr.fill()
 
     def get_visualizer_mode_name(self):
+        """Return the human-readable name of the current visualizer mode."""
         mode_names = [
             "Frequency Bars", "Enhanced Waveform", "Circular Spectrum",
             "Radial Analyzer", "Particle System", "Abstract Flow"
@@ -2842,10 +3106,12 @@ class Linamp(Gtk.Application):
         return mode_names[self.visualization_mode % len(mode_names)]
 
     def get_color_scheme_name(self):
+        """Return the human-readable name of the current color scheme."""
         scheme_names = ["Default", "Fire", "Ocean", "Neon", "Pastel"]
         return scheme_names[self.color_scheme % len(scheme_names)]
 
     def hsv_to_rgb(self, h, s, v):
+        """Convert HSV values to an RGB tuple."""
         c = v * s
         x = c * (1 - abs((h * 6) % 2 - 1))
         m = v - c
@@ -2864,6 +3130,7 @@ class Linamp(Gtk.Application):
         return r + m, g + m, b + m
 
     def load_presets(self):
+        """Load projectM presets from configured directories into memory."""
         try:
             if os.path.exists(self.preset_dir):
                 presets = [f for f in os.listdir(self.preset_dir)
@@ -2892,6 +3159,7 @@ class Linamp(Gtk.Application):
             self.create_embedded_presets()
 
     def create_embedded_presets(self):
+        """Populate a small set of built-in embedded presets."""
         embedded_presets = [
             "Wave Form", "Spectrum Analyzer", "Circular Visual",
             "Particle Field", "Crystal Motion", "Flow State",
@@ -2906,6 +3174,7 @@ class Linamp(Gtk.Application):
             self.preset_categories[category].append(preset)
 
     def categorize_preset(self, preset_name):
+        """Return a category string for a preset name."""
         # Defer to PresetManager to avoid duplication
         if hasattr(self, 'preset_manager') and self.preset_manager:
             return self.preset_manager.categorize_preset(preset_name)
@@ -2926,6 +3195,7 @@ class Linamp(Gtk.Application):
             return "Abstract"
 
     def check_pulseaudio(self):
+        """Check whether projectM pulseaudio helper exists on the system."""
         if shutil.which("projectM-pulseaudio"):
             return True
         common_paths = [
@@ -2939,6 +3209,7 @@ class Linamp(Gtk.Application):
         return False
 
     def stop_projectm(self):
+        """Stop any running projectM process safely."""
         try:
             if hasattr(self, 'projectm_process') and self.projectm_process:
                 self.projectm_process.terminate()
@@ -2956,6 +3227,7 @@ class Linamp(Gtk.Application):
             self.projectm_process = None
 
     def start_projectm(self):
+        """Start the projectM process with configured arguments."""
         try:
             self.stop_projectm()
             if not self.projectm_available:
@@ -3011,58 +3283,69 @@ class Linamp(Gtk.Application):
             return False
 
     def start_monitoring(self):
-
-        def monitor():
-            try:
-                if self.projectm_process:
-                    while self.projectm_process and self.projectm_process.poll() is None:
-                        if self.projectm_process and self.projectm_process.stdout and self.projectm_process.stderr:
-                            ready, _, _ = select.select(
-                                [self.projectm_process.stdout, self.projectm_process.stderr],
-                                [], [], 1.0
-                            )
-                            for stream in ready:
-                                line = stream.readline()
-                                if line:
-                                    line = line.strip()
-                                    if "GFileInfo created without standard::icon" in line:
-                                        continue
-                                    if "should not be reached" in line and "g_file_info_get_icon" in line:
-                                        continue
-                                    if stream == self.projectm_process.stderr:
-                                        logger.warning(f"projectM stderr: {line}")
-                                    else:
-                                        logger.debug(f"projectM stdout: {line}")
-                    if self.projectm_process:
-                        stdout, stderr = self.projectm_process.communicate()
-                        if stderr:
-                            filtered_stderr = '\n'.join([
-                                line for line in stderr.split('\n')
-                                if "GFileInfo created without standard::icon" not in line
-                                and not ("should not be reached" in line and "g_file_info_get_icon" in line)
-                            ])
-                            if filtered_stderr.strip():
-                                logger.warning(f"projectM final stderr: {filtered_stderr}")
-                        if stdout:
-                            logger.debug(f"projectM final stdout: {stdout}")
-            except Exception:
-                logger.exception("projectM monitoring error")
-        thread = threading.Thread(target=monitor, daemon=True)
+        """Start a background thread to monitor projectM stdout/stderr."""
+        thread = threading.Thread(target=self._projectm_monitor, daemon=True)
         thread.start()
 
-    def cleanup(self):
+    def _projectm_monitor(self):
+        """Background worker that monitors projectM stdout/stderr until it exits."""
         try:
-            if hasattr(self, 'projectm_process') and self.projectm_process:
-                try:
-                    self.projectm_process.terminate()
-                    self.projectm_process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    self.projectm_process.kill()
-                    self.projectm_process.wait()
-                except Exception as e:
-                    logger.warning(f"Error stopping projectM process: {e}")
-                finally:
-                    self.projectm_process = None
+            if self.projectm_process:
+                while self.projectm_process and self.projectm_process.poll() is None:
+                    if self.projectm_process.stdout and self.projectm_process.stderr:
+                        ready, _, _ = select.select(
+                            [self.projectm_process.stdout, self.projectm_process.stderr],
+                            [], [], 1.0
+                        )
+                        for stream in ready:
+                            line = stream.readline()
+                            if line:
+                                self._projectm_handle_stream_line(line, stream == self.projectm_process.stderr)
+                if self.projectm_process:
+                    stdout, stderr = self.projectm_process.communicate()
+                    self._projectm_finalize_output(stdout, stderr)
+        except Exception:
+            logger.exception("projectM monitoring error")
+
+    def _projectm_handle_stream_line(self, line: str, is_stderr: bool):
+        """Process a single output line from projectM and log appropriately."""
+        try:
+            line = line.strip()
+            if "GFileInfo created without standard::icon" in line:
+                return
+            if "should not be reached" in line and "g_file_info_get_icon" in line:
+                return
+            if is_stderr:
+                logger.warning(f"projectM stderr: {line}")
+            else:
+                logger.debug(f"projectM stdout: {line}")
+        except Exception:
+            logger.exception("Error processing projectM output line")
+
+    def _projectm_finalize_output(self, stdout: str, stderr: str):
+        """Handle final stdout/stderr output after projectM process exits."""
+        try:
+            if stderr:
+                filtered_stderr = '\n'.join([
+                    line for line in stderr.split('\n')
+                    if "GFileInfo created without standard::icon" not in line
+                    and not ("should not be reached" in line and "g_file_info_get_icon" in line)
+                ])
+                if filtered_stderr.strip():
+                    logger.warning(f"projectM final stderr: {filtered_stderr}")
+            if stdout:
+                logger.debug(f"projectM final stdout: {stdout}")
+        except Exception:
+            logger.exception("Error finalizing projectM output")
+
+    def cleanup(self):
+        """Clean up running processes and visualization resources."""
+        try:
+            # Ensure projectM process is stopped via dedicated helper
+            try:
+                self.stop_projectm()
+            except Exception as e:
+                logger.warning(f"Error stopping projectM during cleanup: {e}")
             if hasattr(self, 'particle_systems'):
                 for system in self.particle_systems:
                     system['particles'].clear()
@@ -3085,6 +3368,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Error during visualizer cleanup: {e}")
 
     def on_button_press(self, controller, n_press, x, y):
+        """Handle interaction events for the GL visualizer controller."""
         if n_press == 1:
             if self.visualization_mode == 6:
                 self.next_projectm_preset()
@@ -3111,6 +3395,7 @@ class Linamp(Gtk.Application):
                 self.next_preset_category()
 
     def next_projectm_preset(self):
+        """Advance to the next preset in the available presets list."""
         if self.available_presets:
             self.current_preset_index = (self.current_preset_index + 1) % len(self.available_presets)
             preset_name = self.available_presets[self.current_preset_index]
@@ -3119,6 +3404,7 @@ class Linamp(Gtk.Application):
             self._trigger_visualizer_redraw()
 
     def previous_projectm_preset(self):
+        """Go to the previous preset in the available presets list."""
         if self.available_presets:
             self.current_preset_index = (self.current_preset_index - 1) % len(self.available_presets)
             preset_name = self.available_presets[self.current_preset_index]
@@ -3127,18 +3413,21 @@ class Linamp(Gtk.Application):
             self._trigger_visualizer_redraw()
 
     def next_visualization_mode(self):
+        """Switch to the next visualization mode and update status text."""
         self.visualization_mode = (self.visualization_mode + 1) % 7
         self.status_text = f"Mode: {self.get_visualizer_mode_name()}"
         logger.info(f"Switched to visualization mode: {self.get_visualizer_mode_name()}")
         self._trigger_visualizer_redraw()
 
     def previous_visualization_mode(self):
+        """Switch to the previous visualization mode and update status text."""
         self.visualization_mode = (self.visualization_mode - 1) % 6
         self.status_text = f"Mode: {self.get_visualizer_mode_name()}"
         logger.info(f"Switched to visualization mode: {self.get_visualizer_mode_name()}")
         self._trigger_visualizer_redraw()
 
     def cycle_color_scheme(self):
+        """Rotate through available color schemes for the visualizer."""
         self.color_scheme = (self.color_scheme + 1) % 5
         scheme_name = self.get_color_scheme_name()
         self.status_text = f"Colors: {scheme_name}"
@@ -3152,12 +3441,14 @@ class Linamp(Gtk.Application):
             self.queue_draw()
 
     def toggle_glow_effect(self):
+        """Toggle the glow post-processing visual effect."""
         self.glow_effect = not self.glow_effect
         self.status_text = f"Glow: {'ON' if self.glow_effect else 'OFF'}"
         logger.info(f"Glow effect: {'enabled' if self.glow_effect else 'disabled'}")
         self._trigger_visualizer_redraw()
 
     def on_visualizer_scrolled(self, controller, dx, dy):
+        """Handle scroll gestures to interact with the visualizer timeline."""
         if self.visualizer:
             current_time = time.time()
             # Add a small debounce time (100ms) to prevent rapid toggling
@@ -3171,6 +3462,7 @@ class Linamp(Gtk.Application):
                     self.on_button_press(None, 5, 0, 0)
 
     def next_preset_category(self):
+        """Switch to the next preset category and enable preset browsing mode."""
         if self.preset_categories:
             self.visualization_mode = 6
             categories = list(self.preset_categories.keys())
@@ -3190,6 +3482,7 @@ class Linamp(Gtk.Application):
             self._trigger_visualizer_redraw()
 
     def switch_to_preset(self, index):
+        """Switch the active preset to the one specified by index."""
         if 0 <= index < len(self.available_presets):
             preset_name = self.available_presets[index]
             logger.info(f"Switching to preset: {preset_name}")
@@ -3206,15 +3499,19 @@ class Linamp(Gtk.Application):
             self._trigger_visualizer_redraw()
 
     def cycle_visualization_mode(self):
+        """Cycle the visualization mode forward by one step."""
         self.next_visualization_mode()
 
     def get_preset_list(self):
+        """Return a copy of the available preset list."""
         return self.available_presets.copy()
 
     def get_preset_categories(self):
+        """Return a copy of the preset categories mapping."""
         return self.preset_categories.copy()
 
     def set_custom_preset_dir(self, directory):
+        """Set a custom directory to search for projectM presets."""
         if os.path.exists(directory):
             self.custom_preset_dir = directory
             self.load_presets()
@@ -3223,6 +3520,7 @@ class Linamp(Gtk.Application):
         return False
 
     def get_visualization_stats(self):
+        """Return simple diagnostics about the current visualization state."""
         return {
             'mode': self.get_visualizer_mode_name(),
             'color_scheme': self.get_color_scheme_name(),
@@ -3235,12 +3533,14 @@ class Linamp(Gtk.Application):
         }
 
     def set_intensity(self, intensity):
+        """Set the visualizer intensity, clamped to a sensible range."""
         self.intensity = max(0.1, min(2.0, intensity))
         self.status_text = f"Intensity: {self.intensity:.1f}"
         logger.info(f"Visualization intensity set to: {self.intensity}")
         self._trigger_visualizer_redraw()
 
     def toggle_particle_effects(self):
+        """Toggle particle systems on or off for particle visualizations."""
         for system in self.particle_systems:
             system['enabled'] = not system.get('enabled', True)
         enabled_count = sum(1 for system in self.particle_systems if system.get('enabled', True))
@@ -3248,6 +3548,7 @@ class Linamp(Gtk.Application):
         self._trigger_visualizer_redraw()
 
     def reset_visualization(self):
+        """Reset visualization settings to sensible defaults."""
         self.visualization_mode = 0
         self.color_scheme = 0
         self.glow_effect = True
@@ -3264,6 +3565,7 @@ class Linamp(Gtk.Application):
         logger.info("Visualization reset to defaults")
 
     def create_opengl_visualizer(self):
+        """Create and return an OpenGL visualizer object if OpenGL is available."""
         if not OPENGL_AVAILABLE:
             return None
         try:
@@ -3287,6 +3589,7 @@ class Linamp(Gtk.Application):
             return None
 
     def on_gl_realize(self, gl_area):
+        """Handle GLArea realize event and initialize GL resources."""
         try:
             gl_area.make_current()
             gl.glClearColor(0.0, 0.0, 0.0, 1.0)
@@ -3308,6 +3611,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Failed to initialize OpenGL context: {e}")
 
     def on_gl_unrealize(self, gl_area):
+        """Handle GLArea unrealize event and free GL resources."""
         try:
             gl_area.make_current()
             if hasattr(self, 'texture_id'):
@@ -3327,6 +3631,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Failed to cleanup OpenGL resources: {e}")
 
     def on_gl_render(self, gl_area, context):
+        """Render a single frame into the GLArea context."""
         try:
             gl_area.make_current()
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -3340,6 +3645,7 @@ class Linamp(Gtk.Application):
             return False
 
     def on_gl_resize(self, gl_area, width, height):
+        """Handle GLArea resize events to update viewport/state."""
         try:
             gl_area.make_current()
             gl.glViewport(0, 0, width, height)
@@ -3349,12 +3655,14 @@ class Linamp(Gtk.Application):
             logger.error(f"GL resize error: {e}")
 
     def on_gl_visualizer_scrolled(self, controller, dx, dy):
+        """Handle scroll events when the GL visualizer is active."""
         if dy < 0:
             self.on_button_press(None, 4, 0, 0)
         elif dy > 0:
             self.on_button_press(None, 5, 0, 0)
 
     def create_vertex_buffer(self):
+        """Create an OpenGL vertex buffer for rendering visualizer geometry."""
         try:
             vertices = [
                 -1.0, -1.0,  0.0, 0.0,
@@ -3373,6 +3681,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Failed to create vertex buffer: {e}")
 
     def create_basic_shaders(self):
+        """Compile and link basic vertex and fragment shaders for rendering."""
         try:
             vertex_shader_source = """
             #version 330 core
@@ -3403,6 +3712,7 @@ class Linamp(Gtk.Application):
             self.shader_program = None
 
     def render_projectm_texture(self):
+        """Upload and render the current projectM texture into the GL context."""
         try:
             if hasattr(self, 'texture_id') and hasattr(self, 'projectm_texture_data'):
                 gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture_id)
@@ -3419,9 +3729,11 @@ class Linamp(Gtk.Application):
             self.render_fallback_visualization(gl)
 
     def cancel_pending_updates(self):
+        """Cancel or silence any pending visualizer updates or scheduled redraws."""
         pass
 
     def create_progress_section(self, parent):
+        """Create UI elements for track progress and seeking."""
         try:
             progress_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
             progress_box.set_margin_top(6)
@@ -3445,6 +3757,7 @@ class Linamp(Gtk.Application):
             raise
 
     def create_file_management_section(self, parent):
+        """Create file management UI components for adding and clearing files."""
         try:
             file_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
             file_box.set_margin_top(10)
@@ -3468,6 +3781,7 @@ class Linamp(Gtk.Application):
             raise
 
     def create_equalizer_ui(self, parent):
+        """Build the equalizer UI and its controls."""
         try:
             eq_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
             eq_box.set_margin_top(5)
@@ -3525,6 +3839,7 @@ class Linamp(Gtk.Application):
             raise
 
     def create_playlist_section(self, parent):
+        """Create the playlist management section in the UI."""
         try:
             playlist_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
             playlist_box.set_margin_top(5)
@@ -3630,6 +3945,7 @@ class Linamp(Gtk.Application):
         label.set_text(duration_text)
 
     def create_visualizer_section(self, parent):
+        """Create visualizer controls and display area."""
         try:
             visualizer_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
             visualizer_box.set_margin_top(5)
@@ -3685,6 +4001,7 @@ class Linamp(Gtk.Application):
             raise
 
     def on_playlist_activate(self, column_view, position):
+        """Handle activation/click action on a playlist item."""
         try:
             self.selection.set_selected(position)
             self.play_selected()
@@ -3693,6 +4010,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error playing track")
 
     def play_selected(self):
+        """Play the currently selected track in the playlist."""
         try:
             selected_item = self.selection.get_selected_item()
             if selected_item:
@@ -3707,6 +4025,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error playing track")
 
     def toggle_play_pause(self):
+        """Toggle playback between play and pause states."""
         try:
             if hasattr(self, 'audio') and self.audio:
                 if self.audio.is_playing():
@@ -3722,6 +4041,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error toggling playback")
 
     def next_track(self):
+        """Skip to the next track in the playlist."""
         try:
             next_item = self.audio.get_next_track(self)
             if next_item:
@@ -3742,6 +4062,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error playing next track")
 
     def previous_track(self):
+        """Go back to the previous track in the playlist."""
         try:
             # Get current position
             current_pos = self.selection.get_selected()
@@ -3762,6 +4083,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error playing previous track")
 
     def play_random_track(self):
+        """Select and play a random track from the playlist."""
         try:
             import random
             total_tracks = self.store.get_n_items()
@@ -3785,6 +4107,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error playing random track")
 
     def on_add_files_clicked(self, button):
+        """Open a file chooser to add files to the playlist."""
         try:
             dialog = Gtk.FileChooserNative(
                 title="Add Audio Files",
@@ -3805,6 +4128,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error adding files")
 
     def on_add_folder_clicked(self, button):
+        """Open a folder chooser to add an entire folder to the playlist."""
         try:
             dialog = Gtk.FileChooserNative(
                 title="Select Folder with Audio Files",
@@ -3819,6 +4143,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error adding folder")
 
     def on_clear_clicked(self, button):
+        """Clear the current playlist after confirmation via dialog."""
         try:
             dialog = Gtk.MessageDialog(
                 transient_for=self.win,
@@ -3834,6 +4159,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error clearing playlist")
 
     def on_eq_presets_clicked(self, button):
+        """Show or hide the equalizer presets popover."""
         try:
             if hasattr(self, '_eq_popover') and self._eq_popover:
                 try:
@@ -3908,6 +4234,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error loading presets")
 
     def on_eq_preset_selected(self, button, values, dialog=None):
+        """Apply a selected equalizer preset to the audio engine."""
         try:
             if not hasattr(self, 'audio') or not self.audio:
                 return
@@ -3923,6 +4250,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error applying preset")
 
     def on_eq_reset_clicked(self, button):
+        """Reset equalizer sliders to neutral/default values."""
         try:
             for slider in self.eq_sliders:
                 slider.set_value(0.0)
@@ -3934,6 +4262,7 @@ class Linamp(Gtk.Application):
             self.show_status_message("Error resetting equalizer")
 
     def update_equalizer_ui(self):
+        """Refresh the equalizer UI sliders to reflect current values."""
         try:
             if not hasattr(self, 'audio') or not self.audio or not hasattr(self, 'eq_sliders'):
                 return
@@ -3945,6 +4274,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Error updating equalizer UI: {e}")
 
     def on_file_dialog_response(self, dialog, response):
+        """Handle response from the file chooser dialog and add selected files."""
         try:
             if response == Gtk.ResponseType.ACCEPT:
                 files = dialog.get_files()
@@ -3956,6 +4286,7 @@ class Linamp(Gtk.Application):
             dialog.close()
 
     def on_folder_dialog_response(self, dialog, response):
+        """Handle response from folder chooser and add files from selected folder."""
         try:
             if response == Gtk.ResponseType.ACCEPT:
                 folder = dialog.get_file()
@@ -4029,6 +4360,7 @@ class Linamp(Gtk.Application):
             logger.error(f"Error saving playlist: {e}")
 
     def on_seek(self, scale, scroll_type, value):
+        """Seek to a specific position in the current track based on UI scale."""
         try:
             if not hasattr(self, 'audio') or not self.audio:
                 return
@@ -4044,6 +4376,7 @@ class Linamp(Gtk.Application):
         return False
 
     def update_progress(self):
+        """Update the UI progress bar and time labels for the current track."""
         try:
             if not hasattr(self, 'audio') or not self.audio or self.is_seeking:
                 return True
@@ -4059,6 +4392,7 @@ class Linamp(Gtk.Application):
         return True
 
     def update_playlist_highlight(self):
+        """Sync the playlist selection UI to the currently playing track."""
         try:
             if hasattr(self, 'current_track') and self.current_track and hasattr(self, 'selection'):
 
@@ -4084,6 +4418,7 @@ class Linamp(Gtk.Application):
             return "0:00"
 
 def main():
+    """Application entry point for running the Linamp GUI."""
     app = Linamp()
     return app.run(sys.argv)
 
