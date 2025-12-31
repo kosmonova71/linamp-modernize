@@ -1,0 +1,18 @@
+Log Analysis Results - 2025-11-20_22-11-13
+
+Error/Warning: Nov 20 21:11:40 Shadowy-Figure org.mozilla.firefox.desktop[6388]: [Parent 6388, Main Thread] WARNING: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7ac461e30' of type 'MaiAtkType27': 'glib warning', file /builddir/build/BUILD/firefox-145.0-build/firefox-145.0/toolkit/xre/nsSigHandlers.cpp:201
+Error/Warning: Nov 20 21:12:06 Shadowy-Figure windsurf.desktop[38240]: [38240:1120/211206.313202:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 2 times!
+Error/Warning: Nov 20 21:15:14 Shadowy-Figure nautilus[62746]: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:981: FINISHME: support more multi-planar formats with DRM modifiers
+Error/Warning: Nov 20 21:15:14 Shadowy-Figure nautilus[62746]: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+Error/Warning: Nov 20 21:17:31 Shadowy-Figure windsurf.desktop[38240]: [38240:1120/211731.756181:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 3 times!
+Error/Warning: Nov 20 21:23:58 Shadowy-Figure org.mozilla.firefox.desktop[6388]: [Parent 6388, Main Thread] WARNING: ../gobject/gsignal.c:3648: signal name 'text-remove::system' is invalid for instance '0x7fe7e9f85050' of type 'MaiAtkType27': 'glib warning', file /builddir/build/BUILD/firefox-145.0-build/firefox-145.0/toolkit/xre/nsSigHandlers.cpp:201
+Error/Warning: Nov 20 21:44:52 Shadowy-Figure ptyxis[66548]: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:981: FINISHME: support more multi-planar formats with DRM modifiers
+Error/Warning: Nov 20 21:44:52 Shadowy-Figure ptyxis[66548]: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+Error/Warning: Nov 20 21:51:37 Shadowy-Figure packagekitd[67045]: error: can't create transaction lock on /usr/lib/sysimage/rpm/.rpm.lock (Resource temporarily unavailable)
+Error/Warning: Nov 20 22:06:50 Shadowy-Figure gnome-logs[68717]: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:981: FINISHME: support more multi-planar formats with DRM modifiers
+Error/Warning: Nov 20 22:06:50 Shadowy-Figure gnome-logs[68717]: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+Total unique errors/warnings found: 11
+
+Total errors/warnings found: 11
+
+No critical errors found.

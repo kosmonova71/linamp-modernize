@@ -1,0 +1,1736 @@
+import sys
+import os
+import json
+import random
+from pathlib import Path
+
+os.environ['ALSA_CONFIG_UCM'] = ''
+
+try:
+    import gi
+    gi.require_version('Gtk', '4.0')
+    gi.require_version('Gst', '1.0')
+    gi.require_version('GLib', '2.0')
+    gi.require_version('GObject', '2.0')
+    from gi.repository import Gtk, Gst, GLib, Pango, Gio, GObject
+except ImportError:
+    sys.exit(1)
+
+Gst.init(None)
+
+class Config:
+    """Configuration management with persistence"""
+    def __init__(self):
+        self.config_dir = Path.home() / ".config" / "linamp"
+        self.config_dir.mkdir(exist_ok=True)
+        self.config_file = self.config_dir / "config.json"
+        self.playlist_file = self.config_dir / "playlist.json"
+        self.default_config = {
+            "volume": 0.8,
+            "last_directory": str(Path.home()),
+            "shuffle": False,
+            "repeat": False,
+            "auto_play_next": True,
+            "window_width": 150,
+            "window_height": 200,
+            "equalizer_enabled": False,
+            "equalizer_preset": "Flat",
+            "equalizer_bands": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        }
+        self.equalizer_presets = {
+            "Flat": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "Rock": [5.0, 4.0, 3.0, 1.0, -1.0, -2.0, -1.0, 1.0, 3.0, 4.0],
+            "Pop": [-1.0, 2.0, 4.0, 5.0, 3.0, 0.0, -1.0, 1.0, 2.0, -1.0],
+            "Jazz": [3.0, 2.0, 1.0, 2.0, -2.0, -1.0, 0.0, 1.0, 3.0, 4.0],
+            "Classical": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -1.0, -1.0, -1.0],
+            "Bass Boost": [8.0, 6.0, 4.0, 2.0, 0.0, -2.0, -4.0, -4.0, -4.0, -4.0],
+            "Vocal": [-4.0, -3.0, -2.0, 0.0, 2.0, 4.0, 4.0, 3.0, 2.0, 0.0],
+            "Electronic": [5.0, 4.0, 3.0, 1.0, 0.0, 1.0, 3.0, 4.0, 5.0, 6.0]
+        }
+        self.equalizer_frequencies = ["32", "64", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"]
+        self.config = self.load_config()
+
+    def load_config(self):
+        """Load configuration from file"""
+        try:
+            if self.config_file.exists():
+                with open(self.config_file, 'r') as f:
+                    return {**self.default_config, **json.load(f)}
+        except Exception:
+            print("Warning: Could not load config")
+        return self.default_config.copy()
+
+    def save_config(self):
+        """Save configuration to file"""
+        try:
+            with open(self.config_file, 'w') as f:
+                json.dump(self.config, f, indent=2)
+        except Exception:
+            print("Warning: Could not save config")
+
+    def load_playlist(self):
+        """Load playlist from file"""
+        try:
+            if self.playlist_file.exists():
+                with open(self.playlist_file, 'r') as f:
+                    return json.load(f)
+        except Exception:
+            print("Warning: Could not load playlist")
+        return []
+
+    def save_playlist(self, playlist):
+        """Save playlist to file"""
+        try:
+            with open(self.playlist_file, 'w') as f:
+                json.dump(playlist, f, indent=2)
+        except Exception:
+            print("Warning: Could not save playlist")
+
+    def save(self):
+        """Save configuration to file"""
+        try:
+            with open(self.config_file, 'w') as f:
+                json.dump(self.config, f, indent=4)
+        except Exception as e:
+            print(f"Error saving config: {e}")
+
+class TrackItem(GObject.Object):
+    """Data model for a track in the playlist"""
+
+    def __init__(self, filename, display_name, duration=0):
+        super().__init__()
+        self._filename = filename
+        self._title = display_name
+        self._duration = self.format_duration(duration)
+        self._duration_seconds = duration
+
+    @GObject.Property(type=str)
+    def filename(self):
+        return self._filename
+
+    @GObject.Property(type=str)
+    def title(self):
+        return self._title
+
+    @GObject.Property(type=str)
+    def duration(self):
+        return self._duration
+
+    @GObject.Property(type=int)
+    def duration_seconds(self):
+        return self._duration_seconds
+
+    def format_duration(self, seconds):
+        """Format duration in MM:SS or HH:MM:SS"""
+        if seconds <= 0:
+            return "--:--"
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        secs = seconds % 60
+        if hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+        else:
+            return f"{minutes:02d}:{secs:02d}"
+
+class Player(GObject.Object):
+
+    def __init__(self):
+        super().__init__()
+        self._uri = None
+        self._volume = 0.5
+        self._state = 'stopped'
+        self._position = 0
+        self._duration = "00:00"
+        self._duration_seconds = 0
+        self._current_stream_info = None
+        self._tracks = []
+        self._player = Gst.ElementFactory.make("playbin", "player")
+        self._player.connect("about-to-finish", self.on_about_to_finish)
+        bus = self._player.get_bus()
+        bus.add_signal_watch()
+        bus.connect("message", self.on_bus_message)
+
+    @GObject.Property(type=str)
+    def uri(self):
+        return self._uri
+
+    @uri.setter
+    def uri(self, value):
+        self._uri = value
+
+    @GObject.Property(type=float, default=0.5)
+    def volume(self):
+        return self._volume
+
+    @volume.setter
+    def volume(self, value):
+        self._volume = value
+
+    @GObject.Property(type=str)
+    def state(self):
+        return self._state
+
+    @GObject.Property(type=int, default=0)
+    def position(self):
+        return self._position
+
+    @position.setter
+    def position(self, value):
+        self._position = value
+
+    @GObject.Property(type=str)
+    def duration(self):
+        return self._duration
+
+    @GObject.Property(type=int, default=0)
+    def duration_seconds(self):
+        return self._duration_seconds
+
+    @GObject.Property(type=object)
+    def current_stream_info(self):
+        return self._current_stream_info
+
+    @GObject.Property(type=object)
+    def tracks(self):
+        return self._tracks
+
+    def on_about_to_finish(self, player):
+        pass
+
+    def on_bus_message(self, bus, message):
+        pass
+
+    def on_duration_changed(self, player, new_duration):
+        self._duration_seconds = new_duration
+        self._duration = self.format_duration(new_duration)
+        self.notify('duration')
+        self.notify('duration_seconds')
+
+    def on_position_changed(self, player, new_position):
+        self._position = new_position
+        self.notify('position')
+
+    def on_current_time_changed(self, player, new_current_time):
+        self._position = new_current_time
+        self.notify('position')
+
+    def format_duration(self, seconds):
+        minutes, secs = divmod(seconds, 60)
+        return f"{minutes:02d}:{secs:02d}"
+
+    def add_track(self, track):
+        self._tracks.append(track)
+
+    def remove_track(self, track):
+        self._tracks.remove(track)
+
+    def notify(self, property_name):
+        super().notify(property_name)
+
+class EnhancedWinampPlayer(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id="org.example.EnhancedWinampGTK4")
+        self.config = Config()
+        self.playlist_store = Gio.ListStore()
+        self.current_track_index = -1
+        self.is_seeking = False
+        self.auto_save_timer_id = None
+        self.player = None
+        self.equalizer = None
+        self.audioconvert = None
+        self.audioresample = None
+        self.metadata_cache = {}
+        self.max_cache_size = 1000
+        self.active_backend = "playbin"
+        self.eq_filter_bin = None
+        self.eq_values = [0.0] * 10
+        self.eq_update_pending = False
+        self.eq_values = self.config.config.get("equalizer_bands", [0.0] * 10).copy()
+        
+        # Crossfade configuration
+        # Beat-aware configuration
+        self.beat_aware_enabled = False
+        self.level_element = None
+        self._last_rms = -60.0
+        self._energy_threshold = -30.0
+        self.crossfade_enabled = True
+        self.crossfade_duration = 4.0  # seconds
+        self._crossfade_running = False
+        self._fade_value = 0.0
+        self._crossfade_timer_id = None
+        self._fade_timer_id = None
+        
+        try:
+            # Create dual playbins for crossfade
+            self.player_a = Gst.ElementFactory.make("playbin", "player_a")
+            self.player_b = Gst.ElementFactory.make("playbin", "player_b")
+            
+            if not self.player_a or not self.player_b:
+                raise RuntimeError("Failed to create playbin elements")
+                
+            self.active_player = self.player_a
+            self.next_player = self.player_b
+            
+            # Setup audio sink for both players
+            audio_sink = None
+            sinks_to_try = [
+                ("pulsesink", None),
+                ("autoaudiosink", None),
+                ("alsasink", "default"),
+                ("alsasink", "hw:1,0"),
+                ("alsasink", "hw:0,0"),
+                ("fakesink", None)
+            ]
+            for sink_name, device in sinks_to_try:
+                try:
+                    audio_sink = Gst.ElementFactory.make(sink_name, sink_name)
+                    if audio_sink:
+                        if device:
+                            audio_sink.set_property("device", device)
+                        test_player = Gst.ElementFactory.make("playbin", "test")
+                        test_player.set_property("audio-sink", audio_sink)
+                        print(f"Using audio sink: {sink_name}" + (f" with device: {device}" if device else ""))
+                        self._working_audio_sink = (sink_name, device)
+                        break
+                except Exception as e:
+                    print(f"Failed to create {sink_name}: {e}")
+                    if audio_sink:
+                        audio_sink = None
+                    continue
+            
+            # Apply audio sink to both players
+            if audio_sink:
+                self.player_a.set_property("audio-sink", audio_sink)
+                self.player_b.set_property("audio-sink", audio_sink)
+            else:
+                print("Warning: No audio sink available, audio disabled")
+                
+            # Setup bus connections for both players
+            for player in [self.player_a, self.player_b]:
+                player.connect("about-to-finish", self.on_about_to_finish)
+                bus = player.get_bus()
+                bus.add_signal_watch()
+                bus.connect("message", self.on_bus_message)
+            
+            # Create equalizers for both players
+            self.equalizer_a = Gst.ElementFactory.make("equalizer-10bands", "eq_a")
+            self.equalizer_b = Gst.ElementFactory.make("equalizer-10bands", "eq_b")
+            
+            # Setup EQ filter bins for both players
+            # Setup level element for beat-aware detection
+            self.level_element = Gst.ElementFactory.make("level", "level")
+            if self.level_element:
+                self.level_element.set_property("interval", 100_000_000)  # 100ms
+                self.level_element.set_property("message", True)
+                print("Level element for beat-aware detection created")
+            else:
+                print("Warning: Level element not available, beat-aware disabled")
+            self.eq_filter_bin_a = None
+            self.eq_filter_bin_b = None
+            if self.equalizer_a and self.equalizer_b:
+                self.setup_equalizer_filter_a()
+                self.setup_equalizer_filter_b()
+            
+            # Legacy compatibility
+            self.player = self.player_a
+            self.equalizer = self.equalizer_a
+            self.eq_filter_bin = self.eq_filter_bin_a
+            
+            print("GStreamer initialized successfully with crossfade support")
+        except Exception as e:
+            print(f"Error initializing GStreamer: {e}")
+            print("Audio playback will be disabled")
+            self.player = None
+            self.equalizer = None
+            self.audioconvert = None
+            self.audioresample = None
+
+    def get_track_metadata(self, filepath):
+        """Get cached metadata or read from file"""
+        if filepath not in self.metadata_cache:
+            if len(self.metadata_cache) >= self.max_cache_size:
+                self.metadata_cache.pop(next(iter(self.metadata_cache)))
+            self.metadata_cache[filepath] = self._read_metadata(filepath)
+        return self.metadata_cache[filepath]
+
+    def setup_equalizer_filter(self):
+        """Setup equalizer as audio filter for playbin (Option A)"""
+        if not self.eq_element:
+            return
+        try:
+            self.eq_filter_bin = Gst.Bin.new("eq-filter")
+            audioconvert_in = Gst.ElementFactory.make("audioconvert", "convert_in")
+            audioresample = Gst.ElementFactory.make("audioresample", "resample")
+            audioconvert_out = Gst.ElementFactory.make("audioconvert", "convert_out")
+            if not all([self.eq_filter_bin, audioconvert_in, audioresample, audioconvert_out, self.eq_element]):
+                print("Warning: Could not create all EQ filter elements")
+                self.eq_filter_bin = None
+                return
+            self.eq_filter_bin.add(audioconvert_in)
+            self.eq_filter_bin.add(audioresample)
+            self.eq_filter_bin.add(self.eq_element)
+            self.eq_filter_bin.add(audioconvert_out)
+            if not audioconvert_in.link(audioresample):
+                print("Failed to link audioconvert_in -> audioresample")
+                return
+            if not audioresample.link(self.eq_element):
+                print("Failed to link audioresample -> equalizer")
+                return
+            if not self.eq_element.link(audioconvert_out):
+                print("Failed to link equalizer -> audioconvert_out")
+                return
+            sink_pad = audioconvert_in.get_static_pad("sink")
+            src_pad = audioconvert_out.get_static_pad("src")
+            ghost_sink = Gst.GhostPad.new("sink", sink_pad)
+            ghost_src = Gst.GhostPad.new("src", src_pad)
+            self.eq_filter_bin.add_pad(ghost_sink)
+            self.eq_filter_bin.add_pad(ghost_src)
+        except Exception as e:
+            print(f"Error setting up equalizer filter: {e}")
+            import traceback
+            traceback.print_exc()
+            self.eq_filter_bin = None
+
+    def setup_equalizer_filter_a(self):
+        """Setup equalizer filter for player A"""
+        if not self.equalizer_a:
+            return
+        try:
+            self.eq_filter_bin_a = Gst.Bin.new("eq-filter-a")
+            audioconvert_in = Gst.ElementFactory.make("audioconvert", "convert_in_a")
+            audioresample = Gst.ElementFactory.make("audioresample", "resample_a")
+            audioconvert_out = Gst.ElementFactory.make("audioconvert", "convert_out_a")
+            if not all([self.eq_filter_bin_a, audioconvert_in, audioresample, audioconvert_out, self.equalizer_a]):
+                print("Warning: Could not create all EQ filter elements for player A")
+                self.eq_filter_bin_a = None
+                return
+            self.eq_filter_bin_a.add(audioconvert_in)
+            self.eq_filter_bin_a.add(audioresample)
+            self.eq_filter_bin_a.add(self.equalizer_a)
+            self.eq_filter_bin_a.add(audioconvert_out)
+            if not audioconvert_in.link(audioresample):
+                print("Failed to link audioconvert_in -> audioresample (A)")
+                return
+            if not audioresample.link(self.equalizer_a):
+                print("Failed to link audioresample -> equalizer (A)")
+                return
+            if not self.equalizer_a.link(audioconvert_out):
+                print("Failed to link equalizer -> audioconvert_out (A)")
+                return
+            sink_pad = audioconvert_in.get_static_pad("sink")
+            src_pad = audioconvert_out.get_static_pad("src")
+            ghost_sink = Gst.GhostPad.new("sink", sink_pad)
+            ghost_src = Gst.GhostPad.new("src", src_pad)
+            self.eq_filter_bin_a.add_pad(ghost_sink)
+            self.eq_filter_bin_a.add_pad(ghost_src)
+        except Exception as e:
+            print(f"Error setting up equalizer filter A: {e}")
+            self.eq_filter_bin_a = None
+
+    def setup_equalizer_filter_b(self):
+        """Setup equalizer filter for player B"""
+        if not self.equalizer_b:
+            return
+        try:
+            self.eq_filter_bin_b = Gst.Bin.new("eq-filter-b")
+            audioconvert_in = Gst.ElementFactory.make("audioconvert", "convert_in_b")
+            audioresample = Gst.ElementFactory.make("audioresample", "resample_b")
+            audioconvert_out = Gst.ElementFactory.make("audioconvert", "convert_out_b")
+            if not all([self.eq_filter_bin_b, audioconvert_in, audioresample, audioconvert_out, self.equalizer_b]):
+                print("Warning: Could not create all EQ filter elements for player B")
+                self.eq_filter_bin_b = None
+                return
+            self.eq_filter_bin_b.add(audioconvert_in)
+            self.eq_filter_bin_b.add(audioresample)
+            self.eq_filter_bin_b.add(self.equalizer_b)
+            self.eq_filter_bin_b.add(audioconvert_out)
+            if not audioconvert_in.link(audioresample):
+                print("Failed to link audioconvert_in -> audioresample (B)")
+                return
+            if not audioresample.link(self.equalizer_b):
+                print("Failed to link audioresample -> equalizer (B)")
+                return
+            if not self.equalizer_b.link(audioconvert_out):
+                print("Failed to link equalizer -> audioconvert_out (B)")
+                return
+            sink_pad = audioconvert_in.get_static_pad("sink")
+            src_pad = audioconvert_out.get_static_pad("src")
+            ghost_sink = Gst.GhostPad.new("sink", sink_pad)
+            ghost_src = Gst.GhostPad.new("src", src_pad)
+            self.eq_filter_bin_b.add_pad(ghost_sink)
+            self.eq_filter_bin_b.add_pad(ghost_src)
+        except Exception as e:
+            print(f"Error setting up equalizer filter B: {e}")
+            self.eq_filter_bin_b = None
+
+    def do_activate(self):
+        self.build_ui()
+        self.load_playlist()
+        self.restore_window_state()
+        volume = self.config.config.get("volume", 0.8)
+        if self.player:
+            self.player.set_property("volume", volume)
+        self.volume_scale.set_value(volume * 100)
+        self.update_control_sensitivity()
+        self.start_auto_save_timer()
+        self.win.present()
+
+    def build_ui(self):
+        """Build the main user interface"""
+        self.win = Gtk.ApplicationWindow(application=self)
+        self.win.set_title("Enhanced GTK4 Winamp Player")
+        self.win.set_default_size(
+            self.config.config.get("window_width", 300),
+            self.config.config.get("window_height", 600)
+        )
+        self.win.connect("destroy", self.on_window_destroy)
+        
+        # Add CSS for small buttons
+        css_provider = Gtk.CssProvider()
+        css = """
+        .small-button {
+            min-width: 8px;
+            min-height: 8px;
+            padding: 0px 1px;
+            font-size: 0.7em;
+        }
+        """
+        css_provider.load_from_data(css.encode())
+        Gtk.StyleContext.add_provider_for_display(
+            self.win.get_display(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        main_box.set_margin_top(1)
+        main_box.set_margin_bottom(1)
+        main_box.set_margin_start(1)
+        main_box.set_margin_end(1)
+        self.win.set_child(main_box)
+        # Create compact layout - combine controls into single container
+        compact_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        main_box.append(compact_box)
+        
+        # Build essential components only
+        self.build_compact_controls(compact_box)
+        self.build_progress_section(compact_box)
+        self.build_playlist(compact_box)
+        
+        # Add compatibility attributes for existing methods
+        self.btn_play = self.play_button
+        self.btn_pause = self.play_button  # Same button handles both
+        self.btn_stop = self.stop_button
+        self.btn_next = self.next_button
+        self.volume_button = self.volume_scale
+        
+        # Add missing button attributes with default values
+        self.btn_prev = self.play_button  # Reuse play button for now
+        self.btn_repeat = self.play_button  # Reuse play button for now
+        self.btn_shuffle = self.play_button  # Reuse play button for now
+
+    def build_compact_controls(self, parent):
+        """Build all controls in a single compact row"""
+        controls_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=1)
+        
+        # Track info (minimal)
+        self.title_label = Gtk.Label(label="No track")
+        self.title_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        self.title_label.set_size_request(80, 15)
+        controls_row.append(self.title_label)
+        
+        # Play controls (tiny buttons)
+        self.play_button = Gtk.Button.new_from_icon_name("media-playback-start")
+        self.play_button.set_size_request(15, 15)
+        self.play_button.connect("clicked", self.on_play_pause)
+        controls_row.append(self.play_button)
+        
+        self.stop_button = Gtk.Button.new_from_icon_name("media-playback-stop")
+        self.stop_button.set_size_request(15, 15)
+        self.stop_button.connect("clicked", self.on_stop)
+        controls_row.append(self.stop_button)
+        
+        self.next_button = Gtk.Button.new_from_icon_name("media-skip-forward")
+        self.next_button.set_size_request(15, 15)
+        self.next_button.connect("clicked", self.on_next_track)
+        controls_row.append(self.next_button)
+        
+        # Crossfade controls (microscopic)
+        self.crossfade_toggle = Gtk.ToggleButton.new_with_label("CF")
+        self.crossfade_toggle.set_size_request(15, 8)
+        self.crossfade_toggle.add_css_class("small-button")
+        self.crossfade_toggle.set_active(self.crossfade_enabled)
+        self.crossfade_toggle.connect("toggled", self.on_crossfade_toggled)
+        controls_row.append(self.crossfade_toggle)
+        
+        self.beat_aware_toggle = Gtk.ToggleButton.new_with_label("B")
+        self.beat_aware_toggle.set_size_request(10, 8)
+        self.beat_aware_toggle.add_css_class("small-button")
+        self.beat_aware_toggle.set_active(self.beat_aware_enabled)
+        self.beat_aware_toggle.connect("toggled", self.on_beat_aware_toggled)
+        controls_row.append(self.beat_aware_toggle)
+        
+        # Volume (compact)
+        self.volume_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0.0, 1.0, 0.05)
+        self.volume_scale.set_value(self.config.config.get("volume", 0.8))
+        self.volume_scale.set_size_request(40, 15)
+        self.volume_scale.connect("value-changed", self.on_volume_changed)
+        controls_row.append(self.volume_scale)
+        
+        parent.append(controls_row)
+
+    def build_track_info(self, parent):
+        """Build track information display"""
+        info_frame = Gtk.Frame(label="Track Info")
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        info_box.set_margin_top(6)
+        info_box.set_margin_bottom(6)
+        info_box.set_margin_start(6)
+        info_box.set_margin_end(6)
+        info_frame.set_child(info_box)
+        self.title_label = Gtk.Label(label="No track loaded")
+        self.title_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        self.title_label.set_xalign(0)
+        self.artist_label = Gtk.Label(label="")
+        self.artist_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        self.artist_label.set_xalign(0)
+        self.album_label = Gtk.Label(label="")
+        self.album_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        self.album_label.set_xalign(0)
+        info_box.append(self.title_label)
+        info_box.append(self.artist_label)
+        info_box.append(self.album_label)
+        parent.append(info_frame)
+
+    def build_controls(self, parent):
+        """Build control buttons"""
+        controls_frame = Gtk.Frame(label="Controls")
+        controls_box = Gtk.Box(spacing=6)
+        controls_box.set_margin_top(6)
+        controls_box.set_margin_bottom(6)
+        controls_box.set_margin_start(6)
+        controls_box.set_margin_end(6)
+        controls_frame.set_child(controls_box)
+        self.btn_prev = Gtk.Button.new_with_label("⏮")
+        self.btn_play = Gtk.Button.new_with_label("▶")
+        self.btn_pause = Gtk.Button.new_with_label("⏸")
+        self.btn_stop = Gtk.Button.new_with_label("⏹")
+        self.btn_next = Gtk.Button.new_with_label("⏭")
+        self.btn_add = Gtk.Button.new_with_label("➕")
+        self.btn_add_folder = Gtk.Button.new_with_label("📁+")
+        self.btn_clear = Gtk.Button.new_with_label("🗑")
+        self.btn_repeat = Gtk.ToggleButton.new_with_label("🔁")
+        self.btn_shuffle = Gtk.ToggleButton.new_with_label("🔀")
+        self.btn_repeat.set_active(False)
+        self.btn_shuffle.set_active(False)
+        self.btn_prev.connect("clicked", self.on_prev_track)
+        self.btn_play.connect("clicked", self.on_play)
+        self.btn_pause.connect("clicked", self.on_pause)
+        self.btn_stop.connect("clicked", self.on_stop)
+        self.btn_next.connect("clicked", self.on_next_track)
+        self.btn_repeat.connect("toggled", self.on_toggle_repeat)
+        self.btn_shuffle.connect("toggled", self.on_toggle_shuffle)
+        self.btn_add.connect("clicked", self.on_add_files)
+        self.btn_add_folder.connect("clicked", self.on_add_folder)
+        self.btn_clear.connect("clicked", self.on_clear_playlist)
+        for btn in [self.btn_prev, self.btn_play, self.btn_pause,
+                   self.btn_stop, self.btn_next, self.btn_repeat,
+                   self.btn_shuffle, self.btn_add, self.btn_add_folder,
+                   self.btn_clear]:
+            controls_box.append(btn)
+        parent.append(controls_frame)
+
+    def build_progress_section(self, parent):
+        """Build compact progress bar"""
+        progress_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=1)
+        
+        # Time labels (tiny)
+        self.current_time_label = Gtk.Label(label="00:00")
+        self.current_time_label.set_size_request(30, 10)
+        progress_box.append(self.current_time_label)
+        
+        # Progress bar (compact)
+        self.progress_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0.0, 100.0, 1.0)
+        self.progress_scale.set_size_request(60, 10)
+        self.progress_scale.set_draw_value(False)
+        self.progress_scale.connect("value-changed", self.on_progress_changed)
+        progress_box.append(self.progress_scale)
+        
+        self.total_time_label = Gtk.Label(label="00:00")
+        self.total_time_label.set_size_request(30, 10)
+        progress_box.append(self.total_time_label)
+        
+        parent.append(progress_box)
+
+    def build_playlist(self, parent):
+        """Build compact playlist"""
+        # Playlist (minimal frame)
+        playlist_frame = Gtk.Frame(label="Playlist")
+        playlist_frame.set_size_request(140, 80)
+        
+        self.playlist_view = Gtk.ListView()
+        self.playlist_store = Gio.ListStore()
+        self.playlist_view.set_model(Gtk.NoSelection(model=self.playlist_store))
+        self.playlist_view.set_size_request(140, 80)
+        
+        playlist_frame.set_child(self.playlist_view)
+        parent.append(playlist_frame)
+
+    def build_volume_control(self, parent):
+        """Build volume control"""
+        volume_frame = Gtk.Frame(label="Volume")
+        volume_box = Gtk.Box(spacing=6)
+        volume_box.set_margin_top(6)
+        volume_box.set_margin_bottom(6)
+        volume_box.set_margin_start(6)
+        volume_box.set_margin_end(6)
+        volume_frame.set_child(volume_box)
+        self.volume_button = Gtk.Button.new_with_label("🔊")
+        self.volume_button.connect("clicked", self.on_mute_toggle)
+        self.volume_scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 0, 100, 1
+        )
+        self.volume_scale.set_value(self.config.config["volume"] * 100)
+        self.volume_scale.connect("value-changed", self.on_volume_changed)
+        self.volume_scale.set_hexpand(True)
+        self.volume_scale.set_draw_value(False)
+        self.volume_scale.set_size_request(100, -1)
+        volume_box.append(self.volume_button)
+        volume_box.append(self.volume_scale)
+        parent.append(volume_frame)
+
+    def build_equalizer(self, parent):
+        """Build equalizer controls"""
+        eq_frame = Gtk.Frame(label="Equalizer")
+        eq_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        eq_box.set_margin_top(3)
+        eq_box.set_margin_bottom(3)
+        eq_box.set_margin_start(3)
+        eq_box.set_margin_end(3)
+        eq_frame.set_child(eq_box)
+        controls_box = Gtk.Box(spacing=4)
+        self.eq_enabled_toggle = Gtk.ToggleButton.new_with_label("Enable EQ")
+        self.eq_enabled_toggle.set_active(False)
+        self.eq_enabled_toggle.connect("toggled", self.on_equalizer_enabled_toggled)
+        preset_keys = list(self.config.equalizer_presets.keys())
+        if "Custom" not in preset_keys:
+            preset_keys.append("Custom")
+        self.eq_preset_combo = Gtk.DropDown.new_from_strings(preset_keys)
+        current_preset = self.config.config.get("equalizer_preset", "Flat")
+        preset_keys = list(self.config.equalizer_presets.keys())
+        if current_preset in preset_keys:
+            preset_index = preset_keys.index(current_preset)
+        else:
+            preset_index = preset_keys.index("Flat")
+            self.config.config["equalizer_preset"] = "Flat"
+        self.eq_preset_combo.set_selected(preset_index)
+        self.eq_preset_combo.connect("notify::selected", self.on_preset_changed)
+        controls_box.append(self.eq_enabled_toggle)
+        controls_box.append(Gtk.Label(label="Preset:"))
+        controls_box.append(self.eq_preset_combo)
+        eq_box.append(controls_box)
+        self.eq_band_scales = []
+        bands_box = Gtk.Box(spacing=1)
+        for i, freq in enumerate(self.config.equalizer_frequencies):
+            band_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+            freq_label = Gtk.Label(label=freq)
+            freq_label.set_size_request(30, -1)
+            freq_label.add_css_class("caption")
+            band_box.append(freq_label)
+            scale = Gtk.Scale.new_with_range(Gtk.Orientation.VERTICAL, 0, 20, 0.5)
+            scale.set_size_request(30, 80)
+            scale.set_inverted(True)
+            scale.set_draw_value(False)
+            current_value = self.config.config.get("equalizer_bands", [0.0]*10)[i]
+            scale.set_value(current_value)
+            scale.connect("value-changed", self.on_eq_scale_changed, i)
+            band_box.append(scale)
+            value_label = Gtk.Label(label=f"{current_value:.0f}")
+            value_label.set_size_request(30, -1)
+            value_label.add_css_class("caption")
+            band_box.append(value_label)
+            bands_box.append(band_box)
+            self.eq_band_scales.append({"scale": scale, "label": value_label})
+        eq_box.append(bands_box)
+        parent.append(eq_frame)
+
+    def build_status_bar(self, parent):
+        """Build status bar"""
+        self.status_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.status_label = Gtk.Label(label="Ready")
+        self.status_label.set_size_request(100, 10)
+        self.status_bar.append(self.status_label)
+        parent.append(self.status_bar)
+
+    def _title_setup(self, factory, list_item):
+        """Setup title column"""
+        label = Gtk.Label()
+        label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        label.set_xalign(0)
+        list_item.set_child(label)
+
+    def _title_bind(self, factory, list_item):
+        """Bind title column"""
+        label = list_item.get_child()
+        item = list_item.get_item()
+        if item and hasattr(item, 'title'):
+            label.set_text(item.title)
+
+    def _duration_setup(self, factory, list_item):
+        """Setup duration column"""
+        label = Gtk.Label()
+        label.set_xalign(0)
+        list_item.set_child(label)
+
+    def _duration_bind(self, factory, list_item):
+        """Bind duration column"""
+        label = list_item.get_child()
+        item = list_item.get_item()
+        if item and hasattr(item, 'duration'):
+            label.set_text(item.duration)
+
+    def build_crossfade_controls(self, parent):
+        """Build crossfade control panel"""
+        crossfade_frame = Gtk.Frame(label="Crossfade")
+        crossfade_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        crossfade_box.set_margin_top(1)
+        crossfade_box.set_margin_bottom(1)
+        crossfade_box.set_margin_start(1)
+        crossfade_box.set_margin_end(1)
+        crossfade_frame.set_child(crossfade_box)
+        
+        # Crossfade enable toggle
+        controls_box = Gtk.Box(spacing=1)
+        self.crossfade_toggle = Gtk.ToggleButton.new_with_label("Enable Crossfade")
+        self.crossfade_toggle.set_active(self.crossfade_enabled)
+        self.crossfade_toggle.connect("toggled", self.on_crossfade_toggled)
+        # Shrink button size
+        self.crossfade_toggle.set_size_request(15, 8)
+        self.crossfade_toggle.add_css_class("small-button")
+        controls_box.append(self.crossfade_toggle)
+        
+        # Crossfade duration
+        controls_box.append(Gtk.Label(label="Duration:"))
+        self.crossfade_duration_scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 2.0, 8.0, 0.5
+        )
+        self.crossfade_duration_scale.set_value(self.crossfade_duration)
+        self.crossfade_duration_scale.set_hexpand(True)
+        self.crossfade_duration_scale.set_draw_value(True)
+        self.crossfade_duration_scale.set_digits(1)
+        self.crossfade_duration_scale.connect("value-changed", self.on_crossfade_duration_changed)
+        controls_box.append(self.crossfade_duration_scale)
+        
+        crossfade_box.append(controls_box)
+        
+        # Beat-aware controls
+        beat_box = Gtk.Box(spacing=1)
+        self.beat_aware_toggle = Gtk.ToggleButton.new_with_label("Beat-Aware")
+        self.beat_aware_toggle.set_active(self.beat_aware_enabled)
+        self.beat_aware_toggle.connect("toggled", self.on_beat_aware_toggled)
+        # Shrink button size
+        self.beat_aware_toggle.set_size_request(15, 8)
+        self.beat_aware_toggle.add_css_class("small-button")
+        beat_box.append(self.beat_aware_toggle)
+        
+        beat_box.append(Gtk.Label(label="Sensitivity:"))
+        self.energy_threshold_scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, -40.0, -20.0, 1.0
+        )
+        self.energy_threshold_scale.set_value(self._energy_threshold)
+        self.energy_threshold_scale.set_hexpand(True)
+        self.energy_threshold_scale.set_draw_value(True)
+        self.energy_threshold_scale.set_digits(0)
+        self.energy_threshold_scale.connect("value-changed", self.on_energy_threshold_changed)
+        beat_box.append(self.energy_threshold_scale)
+        
+        crossfade_box.append(beat_box)
+        parent.append(crossfade_frame)
+
+
+    def restore_window_state(self):
+        """Restore window size and position"""
+        width = self.config.config.get("window_width", 120)
+        height = self.config.config.get("window_height", 300)
+        self.win.set_default_size(width, height)
+
+    def load_playlist(self):
+        """Load saved playlist"""
+        playlist_files = self.config.load_playlist()
+        for file_info in playlist_files:
+            if os.path.exists(file_info):
+                filename = os.path.basename(file_info)
+                track = TrackItem(file_info, filename)
+                self.playlist_store.append(track)
+
+    def on_window_destroy(self, widget):
+        """Save configuration when window closes"""
+        self.stop_auto_save_timer()
+        width = self.win.get_width()
+        height = self.win.get_height()
+        self.config.config["window_width"] = width
+        self.config.config["window_height"] = height
+        self.save_playlist()
+        self.config.save_config()
+        self.quit()
+
+    def on_play_pause(self, button):
+        """Handle play/pause toggle button"""
+        if self.active_player:
+            state = self.active_player.get_state(0).state
+            if state == Gst.State.PLAYING:
+                self.on_pause(button)
+            else:
+                self.on_play(button)
+        else:
+            self.on_play(button)
+
+    def on_play(self, button):
+        """Handle play button click"""
+        if self.current_track_index >= 0:
+            self.play_current_track()
+        else:
+            self.on_add_files(button)
+
+    def on_pause(self, button):
+        """Handle pause button click using dual backend"""
+        if self.active_player:
+            state = self.active_player.get_state(0).state
+            if state == Gst.State.PLAYING:
+                self.active_player.set_state(Gst.State.PAUSED)
+                # Stop crossfade during pause
+                if self._crossfade_running:
+                    self._stop_crossfade()
+                self.status_label.set_text("Paused")
+            elif state == Gst.State.PAUSED:
+                self.active_player.set_state(Gst.State.PLAYING)
+                # Restart crossfade detection if enabled
+                if self.crossfade_enabled and not self._crossfade_running:
+                    self._start_crossfade_timer()
+                self.status_label.set_text("Playing")
+
+    def on_stop(self, button):
+        """Handle stop button click using dual backend"""
+        # Stop crossfade
+        if self._crossfade_running:
+            self._stop_crossfade()
+        
+        # Stop both players
+        if self.player_a:
+            self.player_a.set_state(Gst.State.NULL)
+        if self.player_b:
+            self.player_b.set_state(Gst.State.NULL)
+        
+        # Reset state
+        self.current_track_index = -1
+        self.progress_scale.set_value(0)
+        self.current_time_label.set_text("00:00")
+        self.status_label.set_text("Stopped")
+
+    def on_prev_track(self, button):
+        """Go to previous track"""
+        if len(self.playlist_store) > 0:
+            if self.config.config["shuffle"]:
+                self.current_track_index = random.randint(0, len(self.playlist_store) - 1)
+            else:
+                self.current_track_index = (self.current_track_index - 1) % len(self.playlist_store)
+            self.play_current_track()
+
+    def on_next_track(self, button):
+        """Go to next track"""
+        if len(self.playlist_store) > 0:
+            if self.config.config["shuffle"]:
+                self.current_track_index = random.randint(0, len(self.playlist_store) - 1)
+            else:
+                self.current_track_index = (self.current_track_index + 1) % len(self.playlist_store)
+            self.play_current_track()
+
+    def on_about_to_finish(self, player):
+        """Handle track ending"""
+        if self.config.config["repeat"]:
+            self.play_current_track()
+        elif self.config.config.get("auto_play_next", True):
+            self.on_next_track(None)
+
+    def play_current_track(self):
+        """Play the current track using dual playbin backend with crossfade"""
+        if 0 <= self.current_track_index < len(self.playlist_store):
+            track = self.playlist_store.get_item(self.current_track_index)
+            filename = track.filename
+            display_name = track.title
+            try:
+                def play_track():
+                    try:
+                        uri = GLib.filename_to_uri(filename)
+                        self.current_uri = uri
+                        
+                        # Stop any ongoing crossfade
+                        if self._crossfade_running:
+                            self._stop_crossfade()
+                        
+                        # Set the active player to play the track
+                        if self.active_player:
+                            self.active_player.set_state(Gst.State.NULL)
+                            self.active_player.set_property("uri", uri)
+                            
+                            # Apply EQ if enabled
+                            if (self.config.config.get("equalizer_enabled", False) and 
+                                hasattr(self, 'eq_filter_bin_a') and hasattr(self, 'eq_filter_bin_b')):
+                                try:
+                                    if self.active_player == self.player_a:
+                                        self.active_player.set_property("audio-filter", self.eq_filter_bin_a)
+                                    else:
+                                        self.active_player.set_property("audio-filter", self.eq_filter_bin_b)
+                                except Exception as e:
+                                    print(f"Failed to set EQ filter: {e}")
+                            
+                            self.active_player.set_state(Gst.State.PLAYING)
+                            
+                            # Start crossfade detection timer
+                            if self.crossfade_enabled:
+                                self._start_crossfade_timer()
+                        
+                        self.title_label.set_text(display_name)
+                        self.status_label.set_text(f"Playing: {display_name}")
+                        self.playlist_selection.select_item(self.current_track_index, True)
+                        self.scroll_to_current_track()
+                    except Exception as e:
+                        self.status_label.set_text(f"Error playing: {e}")
+                GLib.idle_add(play_track)
+            except Exception as e:
+                self.status_label.set_text(f"Error playing: {e}")
+
+    def on_playlist_activate(self, listview, position):
+        """Handle playlist item activation"""
+        self.current_track_index = position
+        self.play_current_track()
+
+    def on_toggle_repeat(self, button):
+        """Toggle repeat mode"""
+        self.config.config["repeat"] = button.get_active()
+        self.config.save()
+
+    def on_toggle_shuffle(self, button):
+        """Toggle shuffle mode"""
+        self.config.config["shuffle"] = button.get_active()
+        self.config.save()
+
+    def on_add_files(self, button):
+        """Add files to playlist"""
+        dialog = Gtk.FileDialog()
+        dialog.set_modal(True)
+        dialog.set_title("Add Audio Files")
+        filter_audio = Gtk.FileFilter()
+        filter_audio.set_name("Audio Files (*.mp3, *.wav, *.ogg, *.flac, *.m4a)")
+        for ext in ["*.mp3", "*.wav", "*.ogg", "*.flac", "*.m4a", "*.aac"]:
+            filter_audio.add_pattern(ext)
+        filter_all = Gtk.FileFilter()
+        filter_all.set_name("All Files")
+        filter_all.add_pattern("*")
+        filter_list = Gio.ListStore.new(Gtk.FileFilter)
+        filter_list.append(filter_audio)
+        filter_list.append(filter_all)
+        dialog.set_filters(filter_list)
+        dialog.set_initial_folder(Gio.File.new_for_path(self.config.config["last_directory"]))
+        dialog.open_multiple(
+            self.win,
+            None,
+            self._on_add_files_response
+        )
+
+    def _on_add_files_response(self, dialog, result):
+        """Handle add files dialog response"""
+        try:
+            files = dialog.open_multiple_finish(result)
+            if files:
+                for file in files:
+                    path = file.get_path()
+                    filename = file.get_basename()
+                    track = TrackItem(path, filename)
+                    self.playlist_store.append(track)
+                self.config.config["last_directory"] = os.path.dirname(files[0].get_path())
+                self.config.save_config()
+                self.save_playlist()
+                self.update_control_sensitivity()
+        except Exception as e:
+            print(f"Error adding files: {e}")
+
+    def on_add_folder(self, button):
+        """Add all audio files from a selected folder"""
+        dialog = Gtk.FileDialog()
+        dialog.set_modal(True)
+        dialog.set_title("Add Audio Folder")
+        dialog.select_folder(
+            self.win,
+            None,
+            self._on_add_folder_response
+        )
+
+    def _on_add_folder_response(self, dialog, result):
+        """Handle add folder dialog response"""
+        try:
+            folder = dialog.select_folder_finish(result)
+            if folder:
+                folder_path = folder.get_path()
+                self.config.config["last_directory"] = folder_path
+                self.config.save_config()
+                audio_extensions = {'.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac'}
+                files_added = 0
+                try:
+                    for file_path in Path(folder_path).iterdir():
+                        if file_path.is_file() and file_path.suffix.lower() in audio_extensions:
+                            filename = file_path.name
+                            track = TrackItem(str(file_path), filename)
+                            self.playlist_store.append(track)
+                            files_added += 1
+                            if self.current_track_index == -1:
+                                self.current_track_index = 0
+                                self.title_label.set_text(filename)
+                    if files_added > 0:
+                        self.status_label.set_text(f"Added {files_added} audio files from folder")
+                        self.save_playlist()
+                        if self.current_track_index >= 0:
+                            self.play_current_track()
+                    else:
+                        self.status_label.set_text("No audio files found in folder")
+                    self.update_control_sensitivity()
+                except Exception as e:
+                    print(f"Error scanning folder: {e}")
+                    self.status_label.set_text(f"Error scanning folder: {e}")
+        except Exception as e:
+            print(f"Error selecting folder: {e}")
+
+    def clear_playlist(self):
+        """Clear the playlist"""
+        self.playlist_store.clear()
+        self.current_track_index = -1
+        self.title_label.set_text("No track loaded")
+        self.artist_label.set_text("")
+        self.album_label.set_text("")
+        self.progress_scale.set_value(0)
+        self.current_time_label.set_text("00:00")
+        self.total_time_label.set_text("00:00")
+        self.update_control_sensitivity()
+
+    def on_clear_playlist(self, button):
+        """Handle clear playlist button"""
+        dialog = Gtk.AlertDialog(
+            message="Clear Playlist",
+            detail="Are you sure you want to clear the entire playlist?"
+        )
+        dialog.show(self.win)
+        dialog.connect("response", lambda d, res: self._on_clear_response(res))
+
+    def _on_clear_response(self, response):
+        """Handle clear playlist dialog response"""
+        if response == Gtk.ResponseType.OK:
+            self.clear_playlist()
+            if self.player:
+                self.player.set_state(Gst.State.NULL)
+            self.save_playlist()
+            self.update_control_sensitivity()
+
+    def on_progress_changed(self, scale):
+        """Handle progress bar change"""
+        if self.active_player and not self.is_seeking:
+            value = scale.get_value()
+            duration = self.active_player.query_duration(Gst.Format.TIME)[1]
+            if duration > 0:
+                position = int((value / 100.0) * duration)
+                self.active_player.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, position)
+
+    def on_volume_changed(self, scale):
+        """Handle volume change"""
+
+def clear_playlist(self):
+    """Clear the playlist"""
+    self.playlist_store.clear()
+    self.current_track_index = -1
+    self.title_label.set_text("No track loaded")
+    self.artist_label.set_text("")
+    self.album_label.set_text("")
+    self.progress_scale.set_value(0)
+    self.current_time_label.set_text("00:00")
+    self.total_time_label.set_text("00:00")
+    self.update_control_sensitivity()
+
+    # Handle mute toggle state
+    if hasattr(self, 'active_player') and self.active_player:
+        current_volume = self.active_player.get_property("volume")
+        if current_volume > 0:
+            self.last_volume = current_volume
+            self.active_player.set_property("volume", 0)
+            self.volume_scale.set_value(0)
+        else:
+            volume = getattr(self, 'last_volume', self.config.config.get("volume", 0.8))
+            self.active_player.set_property("volume", volume)
+            self.volume_scale.set_value(volume * 100)
+
+    def on_crossfade_toggled(self, button):
+        """Handle crossfade toggle"""
+        self.crossfade_enabled = button.get_active()
+        self.config.config["crossfade_enabled"] = self.crossfade_enabled
+        self.config.save_config()
+        
+        if hasattr(self, 'active_player') and self.active_player:
+            # Update crossfade settings for the active player
+            if self.crossfade_enabled:
+                self.active_player.set_crossfade_duration(self.config.config.get("crossfade_duration", 3.0))
+            else:
+                self.active_player.set_crossfade_duration(0.0)
+
+    def on_beat_aware_toggled(self, button):
+        """Handle beat-aware crossfade toggle"""
+        self.beat_aware_enabled = button.get_active()
+        self.config.config["beat_aware_enabled"] = self.beat_aware_enabled
+        self.config.save_config()
+        
+        if hasattr(self, 'active_player') and self.active_player:
+            # Update beat-aware setting for the active player
+            self.active_player.set_beat_aware(self.beat_aware_enabled)
+
+    def on_bus_message(self, bus, message):
+        """Handle GStreamer bus messages"""
+        if message.type == Gst.MessageType.EOS:
+            self.on_next_track(None)
+        elif message.type == Gst.MessageType.ERROR:
+            error, debug = message.parse_error()
+            print(f"Error: {error}")
+            print(f"Debug: {debug}")
+        return True
+    def on_seek_value_change(self, scale, scroll_type, value):
+        """Handle seek value change using single backend"""
+        if self.active_player and self.active_player.get_state(0).state == Gst.State.PLAYING:
+            success, duration = self.player.query_duration(Gst.Format.TIME)
+            if success and duration > 0:
+                seek_ns = int((value / 100.0) * duration)
+                self.player.seek_simple(
+                    Gst.Format.TIME,
+                    Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT,
+                    seek_ns,
+                )
+
+    def on_bus_message(self, bus, message):
+        """Handle GStreamer bus messages with enhanced audio error handling"""
+        if message.type == Gst.MessageType.ERROR:
+            error, debug = message.parse_error()
+            error_str = str(error)
+            self.status_label.set_text(f"Error: {error}")
+            print(f"GStreamer Error: {error}")
+            print(f"Debug: {debug}")
+            if "Device is being used by another application" in error_str or "busy" in error_str.lower():
+                print("Audio device busy, attempting to switch audio sink...")
+                self._handle_audio_device_busy()
+            else:
+                self.on_stop(None)
+        elif message.type == Gst.MessageType.WARNING:
+            warning, debug = message.parse_warning()
+            print(f"GStreamer Warning: {warning}")
+        elif message.type == Gst.MessageType.ELEMENT and self.beat_aware_enabled:
+            self._on_level_message(bus, message)
+        elif message.type == Gst.MessageType.TAG:
+            tags = message.parse_tag()
+            title_found, title = tags.get_string("title")
+            if title_found:
+                self.title_label.set_text(title)
+            artist_found, artist = tags.get_string("artist")
+            if artist_found:
+                pass
+
+    def _handle_audio_device_busy(self):
+        """Handle audio device busy errors by switching to alternative audio sink"""
+        if hasattr(self, '_retry_count') and self._retry_count >= 2:
+            print("Max retry attempts reached, stopping playback")
+            self.on_stop(None)
+            return
+        if not hasattr(self, '_retry_count'):
+            self._retry_count = 0
+        self._retry_count += 1
+        was_playing = False
+        current_pos = 0
+        if hasattr(self, 'player') and self.player:
+            state = self.player.get_state(0).state
+            if state == Gst.State.PLAYING:
+                was_playing = True
+                success, pos = self.player.query_position(Gst.Format.TIME)
+                if success:
+                    current_pos = pos
+        alternative_sinks = [
+            ("pulsesink", None),
+            ("autoaudiosink", None),
+            ("fakesink", None)
+        ]
+        for sink_name, device in alternative_sinks:
+            try:
+                new_sink = Gst.ElementFactory.make(sink_name, f"fallback_{sink_name}")
+                if new_sink:
+                    if device:
+                        new_sink.set_property("device", device)
+                    if self.player:
+                        self.player.set_state(Gst.State.NULL)
+                    self.player.set_property("audio-sink", new_sink)
+                    print(f"Switched to fallback audio sink: {sink_name}")
+                    if was_playing and hasattr(self, 'current_uri'):
+                        self.player.set_property("uri", self.current_uri)
+                        self.player.set_state(Gst.State.PLAYING)
+                        if current_pos > 0:
+                            self.player.seek_simple(
+                                Gst.Format.TIME,
+                                Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT,
+                                current_pos
+                            )
+                    return
+            except Exception as e:
+                print(f"Failed to switch to {sink_name}: {e}")
+                continue
+        print("No alternative audio sinks available")
+        self.on_stop(None)
+
+    def format_time_ns(self, nanoseconds):
+        """Format time in nanoseconds to MM:SS"""
+        seconds = nanoseconds // 1000000000
+        return self.format_time_seconds(seconds)
+
+    def format_time_seconds(self, seconds):
+        """Format time in seconds to MM:SS or HH:MM:SS"""
+        if seconds < 0:
+            return "00:00"
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        secs = seconds % 60
+        if hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+        else:
+            return f"{minutes:02d}:{secs:02d}"
+
+    def update_progress(self):
+        """Update progress bar and time display"""
+        if not self.is_seeking:
+            GLib.idle_add(self._update_progress_main_thread)
+        return True
+
+    def _update_progress_main_thread(self):
+        """Update progress from main thread using single backend"""
+        try:
+            if self.active_player:
+                success, position = self.active_player.query_position(Gst.Format.TIME)
+                success2, duration = self.active_player.query_duration(Gst.Format.TIME)
+            else:
+                return
+            if success and success2 and duration > 0:
+                self.current_time_label.set_text(self.format_time_ns(position))
+                self.total_time_label.set_text(self.format_time_ns(duration))
+                percent = (position / duration) * 100
+                self.progress_scale.set_value(percent)
+        except Exception as e:
+            print(f"Error updating progress: {e}")
+
+    def setup_keyboard_shortcuts(self):
+        """Setup keyboard shortcuts"""
+        pass
+
+    def update_control_sensitivity(self):
+        """Update sensitivity of playback controls based on playlist state"""
+        has_tracks = len(self.playlist_store) > 0
+        self.btn_play.set_sensitive(has_tracks)
+        self.btn_next.set_sensitive(has_tracks)
+        self.btn_prev.set_sensitive(has_tracks)
+        self.btn_pause.set_sensitive(has_tracks)
+        self.btn_stop.set_sensitive(has_tracks)
+
+    def do_startup(self):
+        """Application startup"""
+        Gtk.Application.do_startup(self)
+        GLib.timeout_add(500, self.update_progress)
+
+    def start_auto_save_timer(self):
+        """Start the auto-save timer to save playlist every 30 seconds"""
+        if self.auto_save_timer_id:
+            GLib.source_remove(self.auto_save_timer_id)
+        self.auto_save_timer_id = GLib.timeout_add_seconds(30, self.auto_save_playlist)
+
+    def stop_auto_save_timer(self):
+        """Stop the auto-save timer"""
+        if self.auto_save_timer_id:
+            GLib.source_remove(self.auto_save_timer_id)
+            self.auto_save_timer_id = None
+
+    def auto_save_playlist(self):
+        """Auto-save playlist callback"""
+        self.save_playlist()
+        return True
+
+    def save_playlist(self):
+        """Save current playlist to file"""
+        playlist = []
+        for i in range(len(self.playlist_store)):
+            track = self.playlist_store.get_item(i)
+            playlist.append(track.filename)
+        self.config.save_playlist(playlist)
+
+    def on_decodebin_pad_added(self, element, pad):
+        """Handle new pads from decodebin"""
+        sinkpad = self.audioconvert.get_static_pad("sink")
+        if sinkpad and not sinkpad.is_linked():
+            pad.link(sinkpad)
+
+    def load_equalizer_settings(self):
+        """Load equalizer settings from config"""
+        if self.equalizer:
+            pass
+
+    def on_equalizer_enabled_toggled(self, button):
+        """Handle equalizer toggle using audio filter approach for both players"""
+        if button.get_active():
+            if self.player_a and self.player_b and self.eq_filter_bin_a and self.eq_filter_bin_b:
+                try:
+                    self.player_a.set_property("audio-filter", self.eq_filter_bin_a)
+                    self.player_b.set_property("audio-filter", self.eq_filter_bin_b)
+                    print("Equalizer filters enabled for both players")
+                except Exception as e:
+                    print(f"Failed to set EQ filters: {e}")
+                    button.set_active(False)
+            else:
+                print("Cannot enable EQ: players or filters not available")
+                button.set_active(False)
+        else:
+            if self.player_a and self.player_b:
+                try:
+                    self.player_a.set_property("audio-filter", None)
+                    self.player_b.set_property("audio-filter", None)
+                    print("Equalizer filters disabled for both players")
+                except Exception as e:
+                    print(f"Failed to remove EQ filters: {e}")
+
+    def on_preset_changed(self, combo, param_spec):
+        """Handle equalizer preset selection change"""
+        if not self.equalizer:
+            return
+        if not hasattr(self, 'eq_band_scales'):
+            selected = combo.get_selected()
+            if selected == Gtk.INVALID_LIST_POSITION:
+                return
+            preset_name = combo.get_model().get_string(selected)
+            if preset_name in self.config.equalizer_presets:
+                bands = self.config.equalizer_presets[preset_name]
+                self.config.config["equalizer_bands"] = bands.copy()
+                self.config.config["equalizer_preset"] = preset_name
+                self.config.save_config()
+            return
+        selected = combo.get_selected()
+        if selected == Gtk.INVALID_LIST_POSITION:
+            return
+        preset_name = combo.get_model().get_string(selected)
+        if preset_name in self.config.equalizer_presets:
+            bands = self.config.equalizer_presets[preset_name]
+            self.config.config["equalizer_bands"] = bands.copy()
+            self.config.config["equalizer_preset"] = preset_name
+            self.config.save_config()
+            for i, value in enumerate(bands):
+                if i < len(self.eq_band_scales):
+                    self.eq_band_scales[i]["scale"].set_value(value)
+                    self.eq_band_scales[i]["label"].set_text(f"{value:.1f}")
+                    if self.equalizer:
+                        self.equalizer.set_property(f"band{i}", value)
+
+    def on_eq_scale_changed(self, scale, band):
+        """Handle scale value change with throttling to prevent segfaults"""
+        self.eq_values[band] = scale.get_value()
+        if not self.eq_update_pending:
+            self.eq_update_pending = True
+            GLib.timeout_add(40, self.apply_eq_safely)
+
+    def apply_eq_safely(self):
+        """Apply EQ values safely to both players"""
+        self.eq_update_pending = False
+        if not self.equalizer_a or not self.equalizer_b:
+            return False
+        for i, val in enumerate(self.eq_values):
+            try:
+                self.equalizer_a.set_property(f"band{i}", val)
+                self.equalizer_b.set_property(f"band{i}", val)
+            except Exception as e:
+                print(f"EQ band {i} failed on both players:", e)
+        return False
+
+    def on_crossfade_toggled(self, button):
+        """Handle crossfade toggle"""
+        self.crossfade_enabled = button.get_active()
+        if self.crossfade_enabled and self.active_player:
+            # Start crossfade detection if playing
+            state = self.active_player.get_state(0).state
+            if state == Gst.State.PLAYING:
+                self._start_crossfade_timer()
+        elif not self.crossfade_enabled:
+            # Stop crossfade if disabled
+            if self._crossfade_running:
+                self._stop_crossfade()
+            if self._crossfade_timer_id:
+                GLib.source_remove(self._crossfade_timer_id)
+                self._crossfade_timer_id = None
+
+    def on_crossfade_duration_changed(self, scale):
+        """Handle crossfade duration change"""
+        self.crossfade_duration = scale.get_value()
+
+    def on_beat_aware_toggled(self, button):
+        """Handle beat-aware toggle"""
+        self.beat_aware_enabled = button.get_active()
+        if self.beat_aware_enabled:
+            print("Beat-aware crossfade enabled")
+        else:
+            print("Beat-aware crossfade disabled")
+
+    def on_energy_threshold_changed(self, scale):
+        """Handle energy threshold change"""
+        self._energy_threshold = scale.get_value()
+
+
+    def scroll_to_current_track(self):
+        """Auto-scroll playlist to show currently playing track"""
+        if self.current_track_index >= 0 and hasattr(self, "playlist_view"):
+            GLib.idle_add(self._do_scroll_to_current_track)
+
+    def _do_scroll_to_current_track(self):
+        """Perform the actual scrolling to current track"""
+        try:
+            scroller = self.playlist_view.get_parent()
+            if scroller:
+                vadjustment = scroller.get_vadjustment()
+                if vadjustment:
+                    total_items = len(self.playlist_store)
+                    if total_items > 0 and self.current_track_index >= 0:
+                        item_ratio = self.current_track_index / total_items
+                        max_scroll = vadjustment.get_upper() - vadjustment.get_page_size()
+                        target_scroll = max_scroll * item_ratio
+                        center_offset = vadjustment.get_page_size() / 2
+                        final_scroll = max(0, target_scroll - center_offset + 30)
+                        vadjustment.set_value(final_scroll)
+                        print(f"Scrolled to track {self.current_track_index}, position: {final_scroll}")
+        except Exception as e:
+            print(f"Error scrolling to current track: {e}")
+        return False
+
+    def cleanup(self):
+        """Cleanup resources safely"""
+        try:
+            # Stop crossfade timers
+            if hasattr(self, '_crossfade_timer_id') and self._crossfade_timer_id:
+                GLib.source_remove(self._crossfade_timer_id)
+            if hasattr(self, '_fade_timer_id') and self._fade_timer_id:
+                GLib.source_remove(self._fade_timer_id)
+            
+            # Stop both players
+            if hasattr(self, 'player_a') and self.player_a:
+                self.player_a.set_state(Gst.State.NULL)
+            if hasattr(self, 'player_b') and self.player_b:
+                self.player_b.set_state(Gst.State.NULL)
+            
+            if hasattr(self, 'metadata_cache'):
+                self.metadata_cache.clear()
+        except Exception as e:
+            print(f"Cleanup warning: {e}")
+
+    def _start_crossfade_timer(self):
+        """Start the crossfade detection timer"""
+        if self._crossfade_timer_id:
+            GLib.source_remove(self._crossfade_timer_id)
+        self._crossfade_timer_id = GLib.timeout_add(200, self._check_crossfade)
+
+    def _check_crossfade(self):
+        """Check if it's time to start crossfade"""
+        if not self.crossfade_enabled or self._crossfade_running:
+            return True
+
+        try:
+            ok, pos = self.active_player.query_position(Gst.Format.TIME)
+            ok2, dur = self.active_player.query_duration(Gst.Format.TIME)
+
+            if not ok or not ok2 or dur <= 0:
+                return True
+
+            remaining = (dur - pos) / Gst.SECOND
+            if remaining <= self.crossfade_duration:
+                self._start_crossfade()
+                return False
+        except Exception as e:
+            print(f"Error checking crossfade: {e}")
+
+        return True
+
+    def _start_crossfade(self):
+        """Start the crossfade process"""
+        next_uri = self._get_next_track_uri()
+        if not next_uri:
+            return
+
+        self._crossfade_running = True
+
+        # Setup next player
+        self.next_player.set_state(Gst.State.NULL)
+        self.next_player.set_property("uri", next_uri)
+        self.next_player.set_property("volume", 0.0)
+        
+        # Apply EQ to next player if enabled
+        if (self.config.config.get("equalizer_enabled", False) and 
+            hasattr(self, 'eq_filter_bin_a') and hasattr(self, 'eq_filter_bin_b')):
+            try:
+                if self.next_player == self.player_a:
+                    self.next_player.set_property("audio-filter", self.eq_filter_bin_a)
+                else:
+                    self.next_player.set_property("audio-filter", self.eq_filter_bin_b)
+            except Exception as e:
+                print(f"Failed to set EQ filter for next player: {e}")
+        
+        self.next_player.set_state(Gst.State.PLAYING)
+
+        # Start fade animation
+        self._fade_value = 0.0
+        if self._fade_timer_id:
+            GLib.source_remove(self._fade_timer_id)
+        self._fade_timer_id = GLib.timeout_add(50, self._fade_step)
+
+    def _fade_step(self):
+        """Perform one step of the crossfade"""
+        step = 0.05  # 5% steps for smooth fade
+        self._fade_value = min(self._fade_value + step, 1.0)
+
+        try:
+            self.active_player.set_property("volume", 1.0 - self._fade_value)
+            self.next_player.set_property("volume", self._fade_value)
+        except Exception as e:
+            print(f"Error setting volume during fade: {e}")
+
+        if self._fade_value >= 1.0:
+            # Crossfade complete
+            self.active_player.set_state(Gst.State.NULL)
+            
+            # Swap players
+            self.active_player, self.next_player = self.next_player, self.active_player
+            
+            # Update current track index
+            self._advance_to_next_track()
+            
+            self._crossfade_running = False
+            self._fade_timer_id = None
+            
+            # Restart crossfade detection for new track
+            if self.crossfade_enabled:
+                self._start_crossfade_timer()
+            
+            return False
+
+        return True
+
+    def _stop_crossfade(self):
+        """Stop any ongoing crossfade"""
+        if self._crossfade_running:
+            self._crossfade_running = False
+            
+            if self._fade_timer_id:
+                GLib.source_remove(self._fade_timer_id)
+                self._fade_timer_id = None
+            
+            # Reset volumes
+            try:
+                if self.active_player:
+                    self.active_player.set_property("volume", 1.0)
+                if self.next_player:
+                    self.next_player.set_property("volume", 0.0)
+                    self.next_player.set_state(Gst.State.NULL)
+            except Exception as e:
+                print(f"Error stopping crossfade: {e}")
+
+    def _get_next_track_uri(self):
+        """Get URI for the next track in playlist"""
+        if len(self.playlist_store) == 0:
+            return None
+        
+        next_index = self.current_track_index
+        
+        if self.config.config["shuffle"]:
+            # For shuffle, pick a random track (not the current one)
+            if len(self.playlist_store) > 1:
+                available_indices = [i for i in range(len(self.playlist_store)) if i != self.current_track_index]
+                next_index = random.choice(available_indices)
+            else:
+                next_index = self.current_track_index
+        else:
+            # For sequential play, move to next track
+            next_index = (self.current_track_index + 1) % len(self.playlist_store)
+            
+            # Handle repeat mode
+            if next_index == 0 and not self.config.config["repeat"]:
+                return None  # End of playlist
+        
+        if 0 <= next_index < len(self.playlist_store):
+            track = self.playlist_store.get_item(next_index)
+            return GLib.filename_to_uri(track.filename)
+        
+        return None
+
+    def _advance_to_next_track(self):
+        """Advance to the next track after crossfade"""
+        if len(self.playlist_store) == 0:
+            return
+        
+        if self.config.config["shuffle"]:
+            if len(self.playlist_store) > 1:
+                available_indices = [i for i in range(len(self.playlist_store)) if i != self.current_track_index]
+                self.current_track_index = random.choice(available_indices)
+        else:
+            self.current_track_index = (self.current_track_index + 1) % len(self.playlist_store)
+            
+            # Handle end of playlist
+            if self.current_track_index == 0 and not self.config.config["repeat"]:
+                self.current_track_index = -1
+                return
+        
+        # Update UI
+        if 0 <= self.current_track_index < len(self.playlist_store):
+            track = self.playlist_store.get_item(self.current_track_index)
+            self.title_label.set_text(track.title)
+            self.status_label.set_text(f"Playing: {track.title}")
+            self.playlist_selection.select_item(self.current_track_index, True)
+            self.scroll_to_current_track()
+
+    def do_shutdown(self):
+        """GTK shutdown handler"""
+        self.cleanup()
+        Gtk.Application.do_shutdown(self)
+if __name__ == '__main__':
+    app = EnhancedWinampPlayer()
+    app.run(sys.argv)
+
+
+    def _on_level_message(self, bus, msg):
+        """Handle level messages for beat-aware crossfade"""
+        if not self.beat_aware_enabled or self._crossfade_running:
+            return
+            
+        if msg.get_structure().get_name() != "level":
+            return
+            
+        try:
+            rms_values = msg.get_structure().get_value("rms")
+            if rms_values and len(rms_values) > 0:
+                rms = rms_values[0]  # Use first channel
+                self._last_rms = rms
+                
+                # Trigger crossfade on low energy (quiet moment)
+                if rms < self._energy_threshold:
+                    # Check if we're near the end of the track
+                    ok, pos = self.active_player.query_position(Gst.Format.TIME)
+                    ok2, dur = self.active_player.query_duration(Gst.Format.TIME)
+                    
+                    if ok and ok2 and dur > 0:
+                        remaining = (dur - pos) / Gst.SECOND
+                        # Only trigger if within crossfade window
+                        if remaining <= self.crossfade_duration * 2:
+                            self._start_crossfade()
+        except Exception as e:
+            print(f"Error processing level message: {e}")
+
+
+
+
+
