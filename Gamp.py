@@ -1,23 +1,25 @@
 #!/usr/bin/env python3
-import gi
-import sys
-import os
-import json
-import subprocess
-import threading
-import time
-import math
-import logging
-import random
-import select
-import gc
-import ctypes
-from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+"""Linamp audio player and visualizer. Provides GUI, audio engine, and optional ProjectM visualizations."""
 from dataclasses import dataclass
 from functools import lru_cache
-import numpy as np
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import ctypes
+import gc
+import json
+import logging
+import math
+import os
+import random
+import select
+import subprocess
+import sys
+import threading
+import time
+
 import cairo
+import numpy as np
 import shutil
 
 try:
@@ -35,8 +37,9 @@ except ImportError:
     gl = None
     shaders = None
     OPENGL_AVAILABLE = False
-    logger = logging.getLogger(APP_NAME)
-    logger.warning("OpenGL support not available, using fallback mode")
+    logging.getLogger(__name__).warning("OpenGL support not available, using fallback mode")
+
+import gi
 
 try:
     gi.require_version("Gtk", "4.0")
@@ -93,6 +96,7 @@ LOGGING_INTERVAL = 1000
 
 @lru_cache(maxsize=METADATA_CACHE_SIZE)
 def get_file_metadata(file_path: str, mtime: float) -> Tuple[str, str, str]:
+    """Return (title, artist, album) inferred from filename or metadata."""
     try:
         basename = os.path.basename(file_path)
         name_without_ext = os.path.splitext(basename)[0]
@@ -115,7 +119,7 @@ def get_file_metadata(file_path: str, mtime: float) -> Tuple[str, str, str]:
 LOG_DIR = Path.home() / ".config" / "linamp"
 try:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-except Exception as e:
+except Exception:
     # If we can't create the directory, fallback to a safe location
     LOG_DIR = Path(os.getenv("XDG_RUNTIME_DIR", "/tmp"))
 
@@ -136,6 +140,7 @@ logger = logging.getLogger(APP_NAME)
 
 @dataclass
 class AudioConfig:
+    """Configuration for audio playback and equalizer settings."""
     volume: float = VOLUME_DEFAULT
     crossfade_enabled: bool = False
     crossfade_duration: float = CROSSFADE_DURATION_DEFAULT
@@ -149,6 +154,7 @@ class AudioConfig:
 
 @dataclass
 class VisualizationConfig:
+    """Settings controlling visualizer mode and appearance."""
     mode: int = 0
     color_scheme: int = 0
     intensity: float = 1.0
@@ -157,6 +163,7 @@ class VisualizationConfig:
     projectm_enabled: bool = False
 
 class Config:
+    """Persistent application configuration management."""
 
     def __init__(self):
         self.config_dir = Path.home() / ".config" / "linamp"
@@ -1273,7 +1280,7 @@ class ProjectMVisualizerWrapper:
                 logger.info("No projectM presets found, using embedded visualizations")
                 self.create_embedded_presets()
             logger.info(f"Loaded {len(self.available_presets)} projectM presets in {len(self.preset_categories)} categories")
-        except Exception as e:
+        except Exception:
             logger.exception("Error loading presets, falling back to embedded presets")
             self.create_embedded_presets()
 
@@ -1476,10 +1483,10 @@ class ProjectMVisualizerWrapper:
 
             self.projectm_texture_data = texture
 
-        except Exception as e:
+        except Exception:
             logger.exception("Error generating projectM texture")
             # Fallback to random texture
-            self.projectm_texture_data = np.random.randint(0, 256, (256, 256, 3), dtype=np.uint8) 
+            self.projectm_texture_data = np.random.randint(0, 256, (256, 256, 3), dtype=np.uint8)
 
     def on_button_press(self, gesture, n_press, x, y):
         pass
@@ -2880,7 +2887,7 @@ class Linamp(Gtk.Application):
                 logger.info("No projectM presets found, using embedded visualizations")
                 self.create_embedded_presets()
             logger.info(f"Loaded {len(self.available_presets)} projectM presets in {len(self.preset_categories)} categories")
-        except Exception as e:
+        except Exception:
             logger.exception("Error loading presets, falling back to embedded presets")
             self.create_embedded_presets()
 
@@ -3038,7 +3045,7 @@ class Linamp(Gtk.Application):
                                 logger.warning(f"projectM final stderr: {filtered_stderr}")
                         if stdout:
                             logger.debug(f"projectM final stdout: {stdout}")
-            except Exception as e:
+            except Exception:
                 logger.exception("projectM monitoring error")
         thread = threading.Thread(target=monitor, daemon=True)
         thread.start()
