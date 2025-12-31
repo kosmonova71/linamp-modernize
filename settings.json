@@ -1,0 +1,19 @@
+{
+  "enable_javascript": true,
+  "enable_plugins": false,
+  "enable_webrtc": false,
+  "enable_geolocation": false,
+  "enable_notifications": false,
+  "enable_cookies": true,
+  "private_browsing": false,
+  "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  "home_page": "about:blank",
+  "search_engine": "https://duckduckgo.com/?q={}",
+  "download_directory": "/home/shadowyfigure/Downloads",
+  "theme": "dark",
+  "adblock_enabled": true,
+  "incognito_mode": false,
+  "anti_fingerprinting_enabled": true,
+  "home_url": "duckduckgo.com/",
+  "tor_enabled": false
+}

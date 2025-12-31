@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Browser Security Test Heatmap with Tooltips</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+    h1 { text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; position: relative; }
+    th { background: #333; color: #fff; }
+    td.allow { background: #c6efce; color: #006100; font-weight: bold; cursor: help; }
+    td.block { background: #ffc7ce; color: #9c0006; font-weight: bold; cursor: help; }
+    tr.category { background: #555; color: #fff; font-weight: bold; }
+    /* Tooltip styling */
+    td[data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 0;
+        top: 100%;
+        white-space: pre-line;
+        background: #333;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 4px;
+        z-index: 100;
+        min-width: 150px;
+        max-width: 400px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+</style>
+</head>
+<body>
+
+<h1>Browser Security Test Heatmap</h1>
+
+<table>
+<tr class="category"><th>Category</th><th>Test</th><th>Result</th></tr>
+
+<!-- CSP -->
+<tr class="category"><td rowspan="14">CSP (Content Security Policy)</td><td>XHR same-origin 'self'</td><td class="allow" data-tooltip="XMLHttpRequest allowed from same-origin with default-src 'self'.">Allow</td></tr>
+<tr><td>XHR same-origin 'none'</td><td class="block" data-tooltip="XMLHttpRequest blocked from same-origin when default-src 'none'.">Block</td></tr>
+<tr><td>XHR connect-src 'self'</td><td class="allow" data-tooltip="XMLHttpRequest allowed when connect-src 'self'.">Allow</td></tr>
+<tr><td>XHR connect-src 'none'</td><td class="block" data-tooltip="XMLHttpRequest blocked when connect-src 'none'.">Block</td></tr>
+<tr><td>XHR cross-origin 'self'</td><td class="block" data-tooltip="XMLHttpRequest blocked due to cross-origin policy.">Block</td></tr>
+<tr><td>XHR cross-origin whitelist</td><td class="allow" data-tooltip="XMLHttpRequest allowed to whitelisted origin.">Allow</td></tr>
+<tr><td>WebSocket default-src 'self'</td><td class="block" data-tooltip="WebSocket blocked by default-src 'self'.">Block</td></tr>
+<tr><td>WebSocket allowed origin</td><td class="allow" data-tooltip="WebSocket allowed to whitelisted origin.">Allow</td></tr>
+<tr><td>EventSource default-src 'self'</td><td class="allow" data-tooltip="EventSource allowed from same-origin.">Allow</td></tr>
+<tr><td>EventSource cross-origin blocked</td><td class="block" data-tooltip="EventSource blocked due to cross-origin restriction.">Block</td></tr>
+<tr><td>Sandbox allow-same-origin</td><td class="allow" data-tooltip="Iframe DOM access allowed with sandbox allow-same-origin.">Allow</td></tr>
+<tr><td>Sandbox without allow-same-origin</td><td class="block" data-tooltip="Iframe DOM access blocked without allow-same-origin.">Block</td></tr>
+<tr><td>Sandbox allow-scripts</td><td class="allow" data-tooltip="Script execution allowed in sandbox with allow-scripts.">Allow</td></tr>
+<tr><td>Sandbox without allow-scripts</td><td class="block" data-tooltip="Script execution blocked without allow-scripts.">Block</td></tr>
+
+<!-- Workers / SharedWorkers -->
+<tr class="category"><td rowspan="4">Workers / SharedWorkers</td><td>Worker / SharedWorker 'self'</td><td class="allow" data-tooltip="Worker or SharedWorker allowed from self origin.">Allow</td></tr>
+<tr><td>Worker / SharedWorker 'none'</td><td class="block" data-tooltip="Worker or SharedWorker blocked when worker-src 'none'.">Block</td></tr>
+<tr><td>Manifest default-src 'self'</td><td class="allow" data-tooltip="Manifest allowed from self origin.">Allow</td></tr>
+<tr><td>Manifest default-src 'none'</td><td class="block" data-tooltip="Manifest blocked when default-src 'none'.">Block</td></tr>
+
+<!-- Forms and Frames -->
+<tr class="category"><td rowspan="5">Forms & Frames</td><td>Form action 'self'</td><td class="allow" data-tooltip="Form submission allowed to self.">Allow</td></tr>
+<tr><td>Form action 'none'</td><td class="block" data-tooltip="Form submission blocked when form-action 'none'.">Block</td></tr>
+<tr><td>frame-ancestors 'none'</td><td class="block" data-tooltip="Framing blocked by frame-ancestors 'none'.">Block</td></tr>
+<tr><td>frame-ancestors 'self'</td><td class="allow" data-tooltip="Framing allowed by frame-ancestors 'self'.">Allow</td></tr>
+<tr><td>frame-ancestors wildcard / cross-origin</td><td class="block" data-tooltip="Framing blocked due to wildcard or cross-origin restrictions.">Block</td></tr>
+
+<!-- CSP Reporting -->
+<tr class="category"><td rowspan="3">CSP Reporting</td><td>report-uri</td><td class="block" data-tooltip="CSP violation report to report-uri blocked, likely by browser privacy settings or extensions.">Block</td></tr>
+<tr><td>report-uri redirect</td><td class="block" data-tooltip="CSP violation report redirected, blocked.">Block</td></tr>
+<tr><td>report-to</td><td class="block" data-tooltip="CSP violation report to report-to endpoint blocked.">Block</td></tr>
+
+<!-- CORS -->
+<tr class="category"><td rowspan="4">CORS</td><td>Simple headers</td><td class="allow" data-tooltip="Access allowed to standard headers without Access-Control-Expose-Headers.">Allow</td></tr>
+<tr><td>Restricted headers w/o expose</td><td class="block" data-tooltip="Access blocked to restricted headers without Access-Control-Expose-Headers.">Block</td></tr>
+<tr><td>Access-Control-Allow-Credentials</td><td class="allow" data-tooltip="Credentials allowed when server sets Access-Control-Allow-Credentials.">Allow</td></tr>
+<tr><td>Cross-origin blocked where disallowed</td><td class="block" data-tooltip="Cross-origin request blocked where not permitted.">Block</td></tr>
+
+<!-- Referrer Policy -->
+<tr class="category"><td rowspan="5">Referrer Policy</td><td>no-referrer</td><td class="block" data-tooltip="Referrer blocked as per policy 'no-referrer'.">Block</td></tr>
+<tr><td>origin</td><td class="allow" data-tooltip="Referrer sent as origin.">Allow</td></tr>
+<tr><td>same-origin (cross-origin)</td><td class="block" data-tooltip="Referrer blocked for cross-origin with same-origin policy.">Block</td></tr>
+<tr><td>origin-when-cross-origin</td><td class="allow" data-tooltip="Referrer allowed for same-origin, blocked cross-origin.">Mixed</td></tr>
+<tr><td>unsafe-url</td><td class="allow" data-tooltip="Referrer always sent with full URL.">Allow</td></tr>
+
+<!-- HSTS -->
+<tr class="category"><td rowspan="5">HSTS</td><td>Plain HTTP requests</td><td class="allow" data-tooltip="HTTP requests upgraded to HTTPS.">Allow</td></tr>
+<tr><td>includeSubDomains omitted</td><td class="allow" data-tooltip="HSTS does not apply to subdomains when includeSubDomains is omitted.">Allow</td></tr>
+<tr><td>includeSubDomains enforced</td><td class="block" data-tooltip="HSTS applies to subdomains and blocks HTTP when enforced.">Block</td></tr>
+<tr><td>Header sent over HTTP</td><td class="allow" data-tooltip="HSTS header ignored when sent over plain HTTP.">Allow</td></tr>
+<tr><td>max-age expiry</td><td class="block" data-tooltip="HSTS expires after max-age, HTTP allowed after expiry.">Block</td></tr>
+
+</table>
+
+</body>
+</html>

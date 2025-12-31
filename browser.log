@@ -1,0 +1,4 @@
+nohup: ignoring input
+ERROR:dbus.proxies:Introspect error on :1.62:/org/freedesktop/portal/desktop: dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Did not receive a reply. Possible causes include: the remote application did not send a reply, the message bus security policy blocked the reply, the reply timeout expired, or the network connection was broken.
+System Tor service is running
+Tor connection test failed: SOCKSHTTPSConnectionPool(host='check.torproject.org', port=443): Max retries exceeded with url: /api/ip (Caused by ConnectTimeoutError(<urllib3.contrib.socks.SOCKSHTTPSConnection object at 0x7f29601f1fd0>, 'Connection to check.torproject.org timed out. (connect timeout=30)'))

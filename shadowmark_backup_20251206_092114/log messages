@@ -1,0 +1,557 @@
+10:06:50 PM gnome-logs: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+10:06:50 PM systemd: Started dbus-:1.2-org.gnome.Logs@0.service.
+10:02:24 PM freshclam: bytecode.cvd database is up-to-date (version: 339, sigs: 80, f-level: 90, builder: nrandolp)
+10:01:00 PM crond: (root) CMDEND (run-parts /etc/cron.hourly)
+10:01:00 PM logger: (/etc/cron.hourly) finished 0anacron
+10:01:00 PM crond: (root) CMD (run-parts /etc/cron.hourly)
+ 9:56:51 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7c6c50890' of type 'MaiAtkType27'
+ 9:56:50 PM systemd: packagekit.service: Consumed 8.530s CPU time, 328.4M memory peak.
+ 9:56:50 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=packagekit comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:56:50 PM systemd: packagekit.service: Deactivated successfully.
+ 9:56:50 PM packagekitd: daemon quit
+ 9:51:56 PM systemd: user-0.slice: Consumed 9.507s CPU time, 350.1M memory peak.
+ 9:51:56 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:56 PM systemd: Stopped user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:51:56 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:56 PM systemd: Stopped user@0.service - User Manager for UID 0.
+ 9:51:56 PM systemd-logind: Removed session 17.
+ 9:51:56 PM systemd: Reached target exit.target - Exit the Session.
+ 9:51:53 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe76b83ca70' of type 'MaiAtkType27'
+ 9:51:47 PM packagekitd: get-updates transaction /644_adabcbad from uid 1000 finished with success after 113ms
+ 9:51:46 PM systemd-logind: Removed session c23.
+ 9:51:46 PM packagekitd: resolve transaction /631_bbadacad from uid 1000 finished with success after 7ms
+ 9:51:46 PM systemd-logind: Session c23 logged out. Waiting for processes to exit.
+ 9:51:46 PM systemd: session-c23.scope: Consumed 9.311s CPU time, 343.1M memory peak.
+ 9:51:46 PM kernel: AUDIT1104 pid=67499 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:51:46 PM kernel: AUDIT1106 pid=67499 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:51:46 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:51:46 PM kernel: AUDIT1104 pid=68146 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM kernel: AUDIT1106 pid=68146 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:51:46 PM packagekitd: resolve transaction /630_dcedaaad from uid 1000 finished with success after 5ms
+ 9:51:46 PM kernel: AUDIT1105 pid=68146 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=0)
+ 9:51:46 PM packagekitd: resolve transaction /629_eececdee from uid 1000 finished with success after 8ms
+ 9:51:46 PM kernel: AUDIT1110 pid=68146 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM kernel: AUDIT1123 pid=68146 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd="dmidecode" exe="/usr/bin/sudo" terminal=pts/5 res=success'
+ 9:51:46 PM sudo:     root : TTY=pts/5 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dmidecode
+ 9:51:46 PM kernel: AUDIT1101 pid=68146 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM packagekitd: get-details transaction /628_acccbdbb from uid 1000 finished with success after 121ms
+ 9:51:46 PM kernel: AUDIT1104 pid=68137 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM kernel: AUDIT1106 pid=68137 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:51:46 PM kernel: AUDIT1105 pid=68137 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=0)
+ 9:51:46 PM kernel: AUDIT1110 pid=68137 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM kernel: AUDIT1123 pid=68137 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=666469736B202D6C exe="/usr/bin/sudo" terminal=pts/5 res=success'
+ 9:51:46 PM sudo:     root : TTY=pts/5 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/fdisk -l
+ 9:51:46 PM kernel: AUDIT1101 pid=68137 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:46 PM systemd: Mounted proc-sys-fs-binfmt_misc.mount - Arbitrary Executable File Formats File System.
+ 9:51:46 PM packagekitd: resolve transaction /627_deddacda from uid 1000 finished with success after 867ms
+ 9:51:45 PM hddtemp: running '/usr/libexec/hddtemp -nq -u C /dev/sda' with root privileges on behalf of 'root'
+ 9:51:45 PM kernel: AUDIT1101 pid=68084 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_permit acct="root" exe="/usr/bin/userhelper" hostname=Shadowy-Figure addr=? terminal=pts/5 res=success'
+ 9:51:45 PM kernel: AUDIT1100 pid=68084 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:authentication grantors=pam_rootok acct="root" exe="/usr/bin/userhelper" hostname=Shadowy-Figure addr=? terminal=pts/5 res=success'
+ 9:51:45 PM packagekitd: get-updates transaction /626_dcdbbbdd from uid 1000 finished with success after 784ms
+ 9:51:43 PM kernel: AUDIT1104 pid=67929 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:43 PM kernel: AUDIT1106 pid=67929 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:43 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:51:43 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p67923-i67924 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:43 PM systemd: run-p67923-i67924.service: Deactivated successfully.
+ 9:51:43 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:43 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:43 PM systemd: Finished man-db-cache-update.service.
+ 9:51:42 PM kernel: AUDIT1105 pid=67929 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:42 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=0)
+ 9:51:42 PM kernel: AUDIT1110 pid=67929 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:42 PM kernel: AUDIT1123 pid=67929 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=6C736877202D73686F7274 exe="/usr/bin/sudo" terminal=pts/5 res=success'
+ 9:51:42 PM sudo:     root : TTY=pts/5 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/lshw -short
+ 9:51:42 PM kernel: AUDIT1101 pid=67929 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:42 PM kernel: AUDIT1104 pid=67866 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:42 PM kernel: AUDIT1106 pid=67866 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:42 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:51:42 PM systemd: Starting man-db-cache-update.service...
+ 9:51:42 PM kernel: AUDIT1138 pid=67871 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=install sw="duf-0.9.0-1.fc43.x86_64" sw_type=rpm key_enforce=0 gpg_res=1 root_dir="/" comm="dnf" exe="/usr/bin/dnf5" hostname=Shadowy-Figure addr=? terminal=pts/6 res=success'
+ 9:51:42 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p67923-i67924 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:42 PM systemd: Started run-p67923-i67924.service - [systemd-run] /usr/bin/systemctl start man-db-cache-update.
+ 9:51:42 PM packagekitd: resolve transaction /625_becdbdca from uid 1000 finished with success after 5ms
+ 9:51:42 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p67644-i67645 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:42 PM systemd: run-p67644-i67645.service: Deactivated successfully.
+ 9:51:42 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:42 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:42 PM systemd: Finished man-db-cache-update.service.
+ 9:51:41 PM packagekitd: Detection of Platform Module failed: No valid Platform ID detected
+ 9:51:39 PM kernel: AUDIT1105 pid=67866 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:39 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=0)
+ 9:51:39 PM kernel: AUDIT1110 pid=67866 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:39 PM kernel: AUDIT1123 pid=67866 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=646E6620696E7374616C6C202D7920647566 exe="/usr/bin/sudo" terminal=pts/5 res=success'
+ 9:51:39 PM sudo:     root : TTY=pts/5 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dnf install -y duf
+ 9:51:39 PM kernel: AUDIT1101 pid=67866 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:39 PM kernel: AUDIT1104 pid=67606 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:39 PM kernel: AUDIT1106 pid=67606 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:39 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:51:38 PM packagekitd: resolve transaction /603_dcbbcdab from uid 1000 finished with success after 3ms
+ 9:51:38 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=foomaticrip-upgrade comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:38 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=foomaticrip-upgrade comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:38 PM systemd: Finished foomaticrip-upgrade.service - Allowing already installed printers for foomatic-rip.
+ 9:51:38 PM kernel: AUDIT1138 pid=67609 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=install sw="perl-Sys-Hostname-0:1.25-520.fc43.x86_64" sw_type=rpm key_enforce=0 gpg_res=1 root_dir="/" comm="dnf" exe="/usr/bin/dnf5" hostname=Shadowy-Figure addr=? terminal=pts/6 res=success'
+ 9:51:38 PM systemd: Starting foomaticrip-upgrade.service - Allowing already installed printers for foomatic-rip...
+ 9:51:38 PM kernel: BPF prog-id=308 op=UNLOAD
+ 9:51:38 PM packagekitd: resolve transaction /602_eabcdceb from uid 1000 finished with success after 3ms
+ 9:51:38 PM kernel: BPF prog-id=301 op=UNLOAD
+ 9:51:38 PM packagekitd: error: can't create transaction lock on /usr/lib/sysimage/rpm/.rpm.lock (Resource temporarily unavailable)
+ 9:51:38 PM kernel: BPF prog-id=309 op=UNLOAD
+ 9:51:38 PM packagekitd: resolve transaction /601_abaabcdc from uid 1000 finished with success after 5ms
+ 9:51:38 PM systemd: Reloading finished in 303 ms.
+ 9:51:38 PM packagekitd: resolve transaction /600_dbebbcbb from uid 1000 finished with success after 894ms
+ 9:51:38 PM systemd: Reloading...
+ 9:51:38 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p67644-i67645 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:38 PM systemd: Started run-p67644-i67645.service - [systemd-run] /usr/bin/systemctl start man-db-cache-update.
+ 9:51:37 PM packagekitd: error: can't create transaction lock on /usr/lib/sysimage/rpm/.rpm.lock (Resource temporarily unavailable)
+ 9:51:34 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p67601-i67602 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:34 PM systemd: run-p67601-i67602.service: Deactivated successfully.
+ 9:51:34 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:34 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:34 PM systemd: Finished man-db-cache-update.service.
+ 9:51:33 PM kernel: AUDIT1105 pid=67606 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:33 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=0)
+ 9:51:33 PM kernel: AUDIT1110 pid=67606 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:33 PM kernel: AUDIT1123 pid=67606 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=646E6620696E7374616C6C202D7920696E7869 exe="/usr/bin/sudo" terminal=pts/5 res=success'
+ 9:51:33 PM sudo:     root : TTY=pts/5 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dnf install -y inxi
+ 9:51:33 PM kernel: AUDIT1101 pid=67606 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:33 PM kernel: AUDIT1104 pid=67551 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:33 PM kernel: AUDIT1106 pid=67551 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:33 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:51:33 PM systemd: Starting man-db-cache-update.service...
+ 9:51:33 PM kernel: AUDIT1138 pid=67554 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=install sw="lsscsi-0.32-14.fc43.x86_64" sw_type=rpm key_enforce=0 gpg_res=1 root_dir="/" comm="dnf" exe="/usr/bin/dnf5" hostname=Shadowy-Figure addr=? terminal=pts/6 res=success'
+ 9:51:33 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p67601-i67602 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:33 PM systemd: Started run-p67601-i67602.service - [systemd-run] /usr/bin/systemctl start man-db-cache-update.
+ 9:51:32 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p67546-i67547 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:32 PM systemd: run-p67546-i67547.service: Deactivated successfully.
+ 9:51:32 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:32 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:32 PM systemd: Finished man-db-cache-update.service.
+ 9:51:31 PM kernel: AUDIT1105 pid=67551 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:31 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=0)
+ 9:51:31 PM kernel: AUDIT1110 pid=67551 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:31 PM kernel: AUDIT1123 pid=67551 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=646E6620696E7374616C6C202D79206C7373637369 exe="/usr/bin/sudo" terminal=pts/5 res=success'
+ 9:51:31 PM sudo:     root : TTY=pts/5 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dnf install -y lsscsi
+ 9:51:31 PM kernel: AUDIT1101 pid=67551 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:31 PM kernel: AUDIT1104 pid=67528 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:31 PM kernel: AUDIT1106 pid=67528 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:31 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:51:31 PM systemd: Starting man-db-cache-update.service...
+ 9:51:31 PM kernel: AUDIT1138 pid=67533 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=install sw="lshw-B.02.20-9.fc43.x86_64" sw_type=rpm key_enforce=0 gpg_res=1 root_dir="/" comm="dnf" exe="/usr/bin/dnf5" hostname=Shadowy-Figure addr=? terminal=pts/6 res=success'
+ 9:51:31 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p67546-i67547 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:31 PM systemd: Started run-p67546-i67547.service - [systemd-run] /usr/bin/systemctl start man-db-cache-update.
+ 9:51:30 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe791a1dd70' of type 'MaiAtkType27'
+ 9:51:23 PM kernel: AUDIT1105 pid=67528 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:23 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=0)
+ 9:51:23 PM kernel: AUDIT1110 pid=67528 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:23 PM kernel: AUDIT1123 pid=67528 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=646E6620696E7374616C6C202D79206C736877 exe="/usr/bin/sudo" terminal=pts/5 res=success'
+ 9:51:23 PM sudo:     root : TTY=pts/5 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dnf install -y lshw
+ 9:51:23 PM kernel: AUDIT1101 pid=67528 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/5 res=success'
+ 9:51:22 PM kernel: AUDIT1105 pid=67499 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:51:22 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=1000)
+ 9:51:22 PM systemd: Started session-c23.scope - Session c23 of User root.
+ 9:51:22 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:22 PM systemd: Started user@0.service - User Manager for UID 0.
+ 9:51:22 PM uresourced: Setting resources on user@0.service (MemoryMin: 0, MemoryLow: 0, CPUWeight: 100, IOWeight: 100)
+ 9:51:22 PM kernel: BPF prog-id=338 op=UNLOAD
+ 9:51:22 PM kernel: AUDIT1105 pid=67505 uid=0 auid=0 ses=17 subj=system_u:system_r:init_t:s0 msg='op=PAM:session_open grantors=pam_selinux,pam_selinux,pam_loginuid,pam_keyinit,pam_namespace,pam_systemd_home,pam_umask,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:51:22 PM (systemd): pam_unix(systemd-user:session): session opened for user root(uid=0) by root(uid=0)
+ 9:51:22 PM systemd-logind: New session '17' of user 'root' with class 'manager-early' and type 'unspecified'.
+ 9:51:22 PM kernel: AUDIT2300 pid=67505 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=pam_selinux default-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 selected-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:51:22 PM kernel: AUDIT1103 pid=67505 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:setcred grantors=? acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=failed'
+ 9:51:22 PM kernel: AUDIT1101 pid=67505 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:51:22 PM systemd: Starting user@0.service - User Manager for UID 0...
+ 9:51:22 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:51:22 PM systemd: Finished user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:51:22 PM systemd-logind: New session 'c23' of user 'root' with class 'user-early' and type 'tty'.
+ 9:51:22 PM systemd: Starting user-runtime-dir@0.service - User Runtime Directory /run/user/0...
+ 9:51:22 PM systemd-logind: Existing logind session ID 3 used by new audit session, ignoring.
+ 9:51:22 PM sudo: shadowyfigure : TTY=pts/4 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/bash /run/media/shadowyfigure/Elements/tools/hardwareinfo.sh
+ 9:51:22 PM kernel: AUDIT1110 pid=67499 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:51:22 PM kernel: AUDIT1123 pid=67499 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=62617368202F72756E2F6D656469612F736861646F77796669677572652F456C656D656E74732F746F6F6C732F6861726477617265696E666F2E7368 exe="/usr/bin/sudo" terminal=pts/4 res=success'
+ 9:51:22 PM kernel: AUDIT1101 pid=67499 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="shadowyfigure" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:51:21 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7c3898b30' of type 'MaiAtkType27'
+ 9:50:40 PM windsurf: [90m[main 2025-11-20T10:50:40.448Z][0m update#setState idle
+ 9:50:18 PM kernel: BPF prog-id=323 op=UNLOAD
+ 9:50:18 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:50:18 PM systemd: systemd-hostnamed.service: Deactivated successfully.
+ 9:49:48 PM gst-plugin-scan: libva info: va_openDriver() returns 0
+ 9:49:48 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:49:48 PM systemd: Started systemd-hostnamed.service - Hostname Service.
+ 9:49:48 PM kernel: BPF prog-id=325 op=LOAD
+ 9:49:48 PM systemd: Started dbus-:1.2-org.gnome.NautilusPreviewer@8.service.
+ 9:49:48 PM kernel: BPF prog-id=324 op=LOAD
+ 9:49:48 PM nautilus: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+ 9:49:48 PM systemd: Started dbus-:1.2-org.gnome.Nautilus@8.service.
+ 9:49:25 PM cupsd: REQUEST localhost - - "POST / HTTP/1.1" 200 192 Renew-Subscription successful-ok
+ 9:49:21 PM systemd: user-0.slice: Consumed 1.082s CPU time, 153.5M memory peak.
+ 9:49:21 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:49:21 PM systemd: Stopped user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:49:21 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:49:21 PM systemd: Stopped user@0.service - User Manager for UID 0.
+ 9:49:21 PM systemd-logind: Removed session 16.
+ 9:49:21 PM systemd: Reached target exit.target - Exit the Session.
+ 9:49:11 PM systemd-logind: Removed session c22.
+ 9:49:11 PM systemd: session-c22.scope: Consumed 894ms CPU time, 147.6M memory peak.
+ 9:49:11 PM kernel: AUDIT1104 pid=67214 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:49:11 PM kernel: AUDIT1106 pid=67214 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:49:11 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:49:09 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7cda98b90' of type 'MaiAtkType27'
+ 9:48:40 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=1000)
+ 9:48:40 PM kernel: AUDIT1105 pid=67214 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:48:40 PM sudo: pam_systemd(sudo:session): Failed to check if /run/user/0/bus exists, ignoring: Permission denied
+ 9:48:40 PM systemd: Started session-c22.scope - Session c22 of User root.
+ 9:48:40 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:48:40 PM systemd: Started user@0.service - User Manager for UID 0.
+ 9:48:40 PM uresourced: Setting resources on user@0.service (MemoryMin: 0, MemoryLow: 0, CPUWeight: 100, IOWeight: 100)
+ 9:48:40 PM kernel: BPF prog-id=322 op=UNLOAD
+ 9:48:40 PM kernel: AUDIT1105 pid=67218 uid=0 auid=0 ses=16 subj=system_u:system_r:init_t:s0 msg='op=PAM:session_open grantors=pam_selinux,pam_selinux,pam_loginuid,pam_keyinit,pam_namespace,pam_systemd_home,pam_umask,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:48:40 PM (systemd): pam_unix(systemd-user:session): session opened for user root(uid=0) by root(uid=0)
+ 9:48:40 PM systemd-logind: New session '16' of user 'root' with class 'manager-early' and type 'unspecified'.
+ 9:48:40 PM kernel: AUDIT2300 pid=67218 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=pam_selinux default-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 selected-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:48:40 PM kernel: AUDIT1103 pid=67218 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:setcred grantors=? acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=failed'
+ 9:48:40 PM kernel: AUDIT1101 pid=67218 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:48:40 PM systemd: Starting user@0.service - User Manager for UID 0...
+ 9:48:40 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:48:40 PM systemd: Finished user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:48:40 PM systemd-logind: New session 'c22' of user 'root' with class 'user-early' and type 'tty'.
+ 9:48:40 PM systemd: Starting user-runtime-dir@0.service - User Runtime Directory /run/user/0...
+ 9:48:40 PM systemd-logind: Existing logind session ID 3 used by new audit session, ignoring.
+ 9:48:40 PM kernel: AUDIT1110 pid=67214 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:48:40 PM kernel: AUDIT1123 pid=67214 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=646E6620696E7374616C6C206E76696469612D6472697665722D63756461 exe="/usr/bin/sudo" terminal=pts/4 res=success'
+ 9:48:40 PM sudo: shadowyfigure : TTY=pts/4 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dnf install nvidia-driver-cuda
+ 9:48:40 PM kernel: AUDIT1101 pid=67214 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="shadowyfigure" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:48:03 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe78a8e50b0' of type 'MaiAtkType27'
+ 9:47:56 PM packagekitd: search-file transaction /596_aeccacda from uid 1000 finished with success after 83ms
+ 9:47:54 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7b5bb1650' of type 'MaiAtkType27'
+ 9:47:52 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 9:47:45 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7ba185650' of type 'MaiAtkType27'
+ 9:47:39 PM systemd: user-0.slice: Consumed 2.174s CPU time, 240.6M memory peak.
+ 9:47:39 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:39 PM systemd: Stopped user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:47:39 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:39 PM systemd: Stopped user@0.service - User Manager for UID 0.
+ 9:47:39 PM systemd-logind: Removed session 15.
+ 9:47:39 PM systemd: Reached target exit.target - Exit the Session.
+ 9:47:39 PM packagekitd: resolve transaction /595_dbbbcbad from uid 1000 finished with success after 5ms
+ 9:47:37 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=fwupd comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:37 PM systemd: Started fwupd.service - Firmware update daemon.
+ 9:47:37 PM fwupd: 10:47:37.568 FuMain               fwupd 2.0.17 ready for requests (locale en_AU.UTF-8)
+ 9:47:37 PM packagekitd: resolve transaction /573_cadaceaa from uid 1000 finished with success after 3ms
+ 9:47:35 PM systemd: Starting fwupd.service - Firmware update daemon...
+ 9:47:35 PM kernel: BPF prog-id=309 op=LOAD
+ 9:47:35 PM systemd: modprobe@sd_mod.service - Load Kernel Module sd_mod was skipped because of an unmet condition check (ConditionKernelModuleLoaded=!sd_mod).
+ 9:47:30 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p66836-i66837 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:30 PM systemd: run-p66836-i66837.service: Deactivated successfully.
+ 9:47:30 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:30 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=man-db-cache-update comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:30 PM systemd: man-db-cache-update.service: Deactivated successfully.
+ 9:47:29 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=packagekit comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:29 PM systemd: Started packagekit.service - PackageKit Daemon.
+ 9:47:29 PM systemd-logind: Removed session c21.
+ 9:47:29 PM systemd: session-c21.scope: Consumed 1.995s CPU time, 234.9M memory peak.
+ 9:47:29 PM kernel: pam_unix(sudo:session): session closed for user root
+ 9:47:29 PM kernel: AUDIT1104 pid=66789 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:47:29 PM kernel: AUDIT1106 pid=66789 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:47:29 PM packagekitd: daemon start
+ 9:47:29 PM systemd: Starting packagekit.service - PackageKit Daemon...
+ 9:47:29 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=foomaticrip-upgrade comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:29 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=foomaticrip-upgrade comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:29 PM systemd: Finished foomaticrip-upgrade.service - Allowing already installed printers for foomatic-rip.
+ 9:47:29 PM kernel: AUDIT1138 pid=66812 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=install sw="tor-0.4.8.17-3.fc43.x86_64" sw_type=rpm key_enforce=0 gpg_res=1 root_dir="/" comm="dnf" exe="/usr/bin/dnf5" hostname=Shadowy-Figure addr=? terminal=pts/5 res=success'
+ 9:47:29 PM systemd: Queuing reload/restart jobs for marked units…
+ 9:47:29 PM kernel: BPF prog-id=68 op=UNLOAD
+ 9:47:29 PM systemd: Reloading finished in 284 ms.
+ 9:47:29 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=run-p66836-i66837 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:29 PM systemd: Started run-p66836-i66837.service - [systemd-run] /usr/bin/systemctl start man-db-cache-update.
+ 9:47:28 PM kernel: AUDIT1114 pid=66820 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:rpm_script_t:s0-s0:c0.c1023 msg='op=adding-user acct="toranon" exe="systemd-sysusers" hostname=? addr=? terminal=? res=success'
+ 9:47:28 PM kernel: AUDIT1116 pid=66820 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:rpm_script_t:s0-s0:c0.c1023 msg='op=adding-group acct="toranon" exe="systemd-sysusers" hostname=? addr=? terminal=? res=success'
+ 9:47:25 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe748d24950' of type 'MaiAtkType27'
+ 9:47:20 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=1000)
+ 9:47:20 PM kernel: AUDIT1105 pid=66789 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:47:20 PM sudo: pam_systemd(sudo:session): Failed to check if /run/user/0/bus exists, ignoring: Permission denied
+ 9:47:20 PM systemd: Started session-c21.scope - Session c21 of User root.
+ 9:47:20 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:20 PM systemd: Started user@0.service - User Manager for UID 0.
+ 9:47:20 PM uresourced: Setting resources on user@0.service (MemoryMin: 0, MemoryLow: 0, CPUWeight: 100, IOWeight: 100)
+ 9:47:20 PM kernel: BPF prog-id=283 op=UNLOAD
+ 9:47:19 PM kernel: AUDIT1105 pid=66793 uid=0 auid=0 ses=15 subj=system_u:system_r:init_t:s0 msg='op=PAM:session_open grantors=pam_selinux,pam_selinux,pam_loginuid,pam_keyinit,pam_namespace,pam_systemd_home,pam_umask,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:47:19 PM (systemd): pam_unix(systemd-user:session): session opened for user root(uid=0) by root(uid=0)
+ 9:47:19 PM systemd-logind: New session '15' of user 'root' with class 'manager-early' and type 'unspecified'.
+ 9:47:19 PM kernel: AUDIT2300 pid=66793 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=pam_selinux default-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 selected-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:47:19 PM kernel: AUDIT1103 pid=66793 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:setcred grantors=? acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=failed'
+ 9:47:19 PM kernel: AUDIT1101 pid=66793 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:47:19 PM systemd: Starting user@0.service - User Manager for UID 0...
+ 9:47:19 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:47:19 PM systemd: Finished user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:47:19 PM systemd-logind: New session 'c21' of user 'root' with class 'user-early' and type 'tty'.
+ 9:47:19 PM systemd: Starting user-runtime-dir@0.service - User Runtime Directory /run/user/0...
+ 9:47:19 PM systemd-logind: Existing logind session ID 3 used by new audit session, ignoring.
+ 9:47:19 PM kernel: AUDIT1110 pid=66789 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:47:19 PM kernel: AUDIT1123 pid=66789 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=646E6620696E7374616C6C20746F72 exe="/usr/bin/sudo" terminal=pts/4 res=success'
+ 9:47:19 PM sudo: shadowyfigure : TTY=pts/4 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dnf install tor
+ 9:47:19 PM kernel: AUDIT1101 pid=66789 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="shadowyfigure" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:47:18 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe749e96350' of type 'MaiAtkType27'
+ 9:47:10 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 9:47:04 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7b15cbe30' of type 'MaiAtkType27'
+ 9:46:56 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 9:46:51 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7ba185a10' of type 'MaiAtkType27'
+ 9:46:31 PM systemd: user-0.slice: Consumed 1.059s CPU time, 156.7M memory peak.
+ 9:46:31 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:46:31 PM systemd: Stopped user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:46:31 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:46:31 PM systemd: Stopped user@0.service - User Manager for UID 0.
+ 9:46:31 PM systemd-logind: Removed session 14.
+ 9:46:31 PM systemd: Reached target exit.target - Exit the Session.
+ 9:46:22 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe773d44cb0' of type 'MaiAtkType27'
+ 9:46:21 PM systemd-logind: Removed session c20.
+ 9:46:21 PM systemd: session-c20.scope: Consumed 897ms CPU time, 150.4M memory peak.
+ 9:46:21 PM kernel: AUDIT1104 pid=66731 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:46:21 PM kernel: AUDIT1106 pid=66731 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:46:21 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:46:20 PM kernel: AUDIT1105 pid=66731 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:46:20 PM sudo: pam_systemd(sudo:session): Failed to check if /run/user/0/bus exists, ignoring: Permission denied
+ 9:46:20 PM systemd: Started session-c20.scope - Session c20 of User root.
+ 9:46:20 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:46:20 PM systemd: Started user@0.service - User Manager for UID 0.
+ 9:46:20 PM uresourced: Setting resources on user@0.service (MemoryMin: 0, MemoryLow: 0, CPUWeight: 100, IOWeight: 100)
+ 9:46:20 PM kernel: BPF prog-id=270 op=UNLOAD
+ 9:46:20 PM kernel: AUDIT1105 pid=66735 uid=0 auid=0 ses=14 subj=system_u:system_r:init_t:s0 msg='op=PAM:session_open grantors=pam_selinux,pam_selinux,pam_loginuid,pam_keyinit,pam_namespace,pam_systemd_home,pam_umask,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:46:20 PM (systemd): pam_unix(systemd-user:session): session opened for user root(uid=0) by root(uid=0)
+ 9:46:20 PM systemd-logind: New session '14' of user 'root' with class 'manager-early' and type 'unspecified'.
+ 9:46:20 PM kernel: AUDIT2300 pid=66735 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=pam_selinux default-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 selected-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:46:20 PM kernel: AUDIT1103 pid=66735 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:setcred grantors=? acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=failed'
+ 9:46:20 PM kernel: AUDIT1101 pid=66735 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:46:20 PM systemd: Starting user@0.service - User Manager for UID 0...
+ 9:46:20 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:46:20 PM systemd: Finished user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:46:20 PM systemd-logind: New session 'c20' of user 'root' with class 'user-early' and type 'tty'.
+ 9:46:20 PM systemd: Starting user-runtime-dir@0.service - User Runtime Directory /run/user/0...
+ 9:46:20 PM systemd-logind: Existing logind session ID 3 used by new audit session, ignoring.
+ 9:46:20 PM sudo: shadowyfigure : TTY=pts/4 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dnf install gstreamer1-plugins-base gstreamer1-plugins-good gstreamer1-plugins-bad gstreamer1-plugins-ugly gstreamer1-libav --skip-unavailable
+ 9:46:20 PM kernel: AUDIT1110 pid=66731 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_env,pam_fprintd acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:46:20 PM kernel: AUDIT1123 pid=66731 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=646E6620696E7374616C6C206773747265616D6572312D706C7567696E732D62617365206773747265616D6572312D706C7567696E732D676F6F64206773747265616D6572312D706C7567696E732D626164206773747265616D6572312D706C7567696E732D75676C79206773747265616D6572312D6C69626176202D2D736B69702D756E617661696C61626C65 exe="/usr/bin/sudo" terminal=pts/4 res=success'
+ 9:46:20 PM kernel: AUDIT1101 pid=66731 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="shadowyfigure" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:46:19 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe748d24650' of type 'MaiAtkType27'
+ 9:45:42 PM systemd: user-0.slice: Consumed 2.409s CPU time, 419.8M memory peak.
+ 9:45:42 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:45:42 PM systemd: Stopped user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:45:42 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:45:42 PM systemd: Stopped user@0.service - User Manager for UID 0.
+ 9:45:42 PM systemd-logind: Removed session 13.
+ 9:45:42 PM systemd: Reached target exit.target - Exit the Session.
+ 9:45:37 PM kernel: BPF prog-id=244 op=UNLOAD
+ 9:45:37 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=fprintd comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:45:37 PM systemd: fprintd.service: Deactivated successfully.
+ 9:45:32 PM systemd-logind: Removed session c19.
+ 9:45:32 PM systemd: session-c19.scope: Consumed 2.213s CPU time, 409.2M memory peak.
+ 9:45:32 PM kernel: AUDIT1104 pid=66614 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:45:32 PM kernel: AUDIT1106 pid=66614 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_close grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:45:32 PM sudo: pam_unix(sudo:session): session closed for user root
+ 9:45:23 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7b4d3d950' of type 'MaiAtkType27'
+ 9:45:22 PM sudo: pam_unix(sudo:session): session opened for user root(uid=0) by shadowyfigure(uid=1000)
+ 9:45:22 PM kernel: AUDIT1105 pid=66614 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:session_open grantors=pam_keyinit,pam_limits,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:45:22 PM sudo: pam_systemd(sudo:session): Failed to check if /run/user/0/bus exists, ignoring: Permission denied
+ 9:45:22 PM systemd: Started session-c19.scope - Session c19 of User root.
+ 9:45:22 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:45:22 PM systemd: Started user@0.service - User Manager for UID 0.
+ 9:45:22 PM uresourced: Setting resources on user@0.service (MemoryMin: 0, MemoryLow: 0, CPUWeight: 100, IOWeight: 100)
+ 9:45:22 PM kernel: BPF prog-id=257 op=UNLOAD
+ 9:45:22 PM kernel: AUDIT1105 pid=66634 uid=0 auid=0 ses=13 subj=system_u:system_r:init_t:s0 msg='op=PAM:session_open grantors=pam_selinux,pam_selinux,pam_loginuid,pam_keyinit,pam_namespace,pam_systemd_home,pam_umask,pam_keyinit,pam_limits,pam_systemd,pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:45:22 PM (systemd): pam_unix(systemd-user:session): session opened for user root(uid=0) by root(uid=0)
+ 9:45:22 PM systemd-logind: New session '13' of user 'root' with class 'manager-early' and type 'unspecified'.
+ 9:45:22 PM kernel: AUDIT2300 pid=66634 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=pam_selinux default-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 selected-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:45:22 PM kernel: AUDIT1103 pid=66634 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:setcred grantors=? acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=failed'
+ 9:45:22 PM kernel: AUDIT1101 pid=66634 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='op=PAM:accounting grantors=pam_unix acct="root" exe="/usr/lib/systemd/systemd-executor" hostname=? addr=? terminal=? res=success'
+ 9:45:22 PM systemd: Starting user@0.service - User Manager for UID 0...
+ 9:45:22 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=user-runtime-dir@0 comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:45:22 PM systemd: Finished user-runtime-dir@0.service - User Runtime Directory /run/user/0.
+ 9:45:22 PM systemd-logind: New session 'c19' of user 'root' with class 'user-early' and type 'tty'.
+ 9:45:22 PM systemd: Starting user-runtime-dir@0.service - User Runtime Directory /run/user/0...
+ 9:45:22 PM systemd-logind: Existing logind session ID 3 used by new audit session, ignoring.
+ 9:45:22 PM kernel: AUDIT1110 pid=66614 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:setcred grantors=pam_unix acct="root" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:45:22 PM sudo: shadowyfigure : TTY=pts/4 ; PWD=/home/shadowyfigure ; USER=root ; COMMAND=/usr/sbin/dnf install gstreamer1-plugins-base gstreamer1-plugins-good gstreamer1-plugins-bad gstreamer1-plugins-ugly gstreamer1-libav
+ 9:45:22 PM kernel: AUDIT1123 pid=66614 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='cwd="/home/shadowyfigure" cmd=646E6620696E7374616C6C206773747265616D6572312D706C7567696E732D62617365206773747265616D6572312D706C7567696E732D676F6F64206773747265616D6572312D706C7567696E732D626164206773747265616D6572312D706C7567696E732D75676C79206773747265616D6572312D6C69626176 exe="/usr/bin/sudo" terminal=pts/4 res=success'
+ 9:45:22 PM kernel: AUDIT1101 pid=66614 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:accounting grantors=pam_unix acct="shadowyfigure" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:45:22 PM kernel: AUDIT1100 pid=66614 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:authentication grantors=pam_unix acct="shadowyfigure" exe="/usr/bin/sudo" hostname=Shadowy-Figure addr=? terminal=/dev/pts/4 res=success'
+ 9:45:07 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=fprintd comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:45:07 PM systemd: Started fprintd.service - Fingerprint Authentication Daemon.
+ 9:45:07 PM kernel: usb 3-5: reset full-speed USB device number 3 using xhci_hcd
+ 9:45:07 PM systemd: Starting fprintd.service - Fingerprint Authentication Daemon...
+ 9:45:07 PM kernel: BPF prog-id=244 op=LOAD
+ 9:45:03 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7790eb170' of type 'MaiAtkType27'
+ 9:44:52 PM systemd: Started ptyxis-spawn-da46bd83-5a56-4f70-8b32-35a271fe6bd4.scope - [systemd-run] /usr/bin/bash.
+ 9:44:52 PM ptyxis: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+ 9:44:51 PM systemd: Started dbus-:1.2-org.gnome.Ptyxis@5.service.
+ 9:44:05 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe78a8e53b0' of type 'MaiAtkType27'
+ 9:42:07 PM gnome-shell: 0x2000004 (Shadow Browser): Frame has assigned frame counter but no frame drawn time
+ 9:41:38 PM rtkit-daemon: Successfully made thread 65932 of process 65908 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 9:41:08 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7b15cb6b0' of type 'MaiAtkType27'
+ 9:37:41 PM rtkit-daemon: Successfully made thread 64915 of process 64891 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 9:23:58 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7e9f85050' of type 'MaiAtkType27'
+ 9:17:55 PM rtkit-daemon: Successfully made thread 62998 of process 62973 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 9:17:31 PM windsurf: [38240:1120/211731.756181:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 3 times!
+ 9:17:21 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7c29a3590' of type 'MaiAtkType27'
+ 9:15:44 PM kernel: BPF prog-id=241 op=UNLOAD
+ 9:15:44 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:15:44 PM systemd: systemd-hostnamed.service: Deactivated successfully.
+ 9:15:33 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7bdb8be90' of type 'MaiAtkType27'
+ 9:15:31 PM systemd: dbus-:1.2-org.gnome.Nautilus@7.service: Consumed 688ms CPU time, 132.2M memory peak.
+ 9:15:31 PM nautilus: Shutting down dropbox extension
+ 9:15:24 PM systemd: dbus-:1.2-org.gnome.NautilusPreviewer@7.service: Consumed 354ms CPU time, 106M memory peak.
+ 9:15:22 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7c67a4170' of type 'MaiAtkType27'
+ 9:15:14 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 9:15:14 PM systemd: Started systemd-hostnamed.service - Hostname Service.
+ 9:15:14 PM kernel: BPF prog-id=243 op=LOAD
+ 9:15:14 PM systemd: Started dbus-:1.2-org.gnome.NautilusPreviewer@7.service.
+ 9:15:14 PM nautilus: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+ 9:15:14 PM systemd: Started dbus-:1.2-org.gnome.Nautilus@7.service.
+ 9:15:08 PM rtkit-daemon: Successfully made thread 62643 of process 62616 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 9:14:30 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7b0a13590' of type 'MaiAtkType27'
+ 9:14:21 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-21:14:21-62128'
+ 9:14:21 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 9:13:01 PM rtkit-daemon: Successfully made thread 62228 of process 62202 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 9:12:06 PM windsurf: [38240:1120/211206.313202:ERROR:ui/gl/gl_surface_presentation_helper.cc:260] GetVSyncParametersIfAvailable() failed for 2 times!
+ 9:11:50 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7c80ec2f0' of type 'MaiAtkType27'
+ 9:09:56 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-21:09:56-61606'
+ 9:09:56 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 9:09:53 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7dd2cb8f0' of type 'MaiAtkType27'
+ 9:09:30 PM rtkit-daemon: Successfully made thread 61810 of process 61785 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 9:01:00 PM crond: (root) CMDEND (run-parts /etc/cron.hourly)
+ 9:01:00 PM logger: (/etc/cron.hourly) finished 0anacron
+ 9:01:00 PM crond: (root) CMD (run-parts /etc/cron.hourly)
+ 8:58:37 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-20:58:37-61025'
+ 8:58:37 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 8:58:05 PM rtkit-daemon: Successfully made thread 61114 of process 61089 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 8:56:52 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-20:56:52-60599'
+ 8:56:52 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 8:55:36 PM rtkit-daemon: Successfully made thread 60715 of process 60689 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 8:54:24 PM systemd: dbus-:1.2-org.gnome.Ptyxis@4.service: Consumed 1.723s CPU time, 207.9M memory peak, 29.9M memory swap peak.
+ 8:54:20 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-20:54:20-60115'
+ 8:54:20 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 8:53:29 PM rtkit-daemon: Successfully made thread 60244 of process 60218 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 8:52:26 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe79b4ccef0' of type 'MaiAtkType27'
+ 8:51:05 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-20:51:05-59711'
+ 8:51:05 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 8:51:05 PM cupsd: REQUEST localhost - - "POST / HTTP/1.1" 200 192 Renew-Subscription successful-ok
+ 8:50:35 PM windsurf: [90m[main 2025-11-20T09:50:35.226Z][0m update#setState idle
+ 8:49:23 PM rtkit-daemon: Successfully made thread 59799 of process 59772 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 8:48:41 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 8:46:01 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-20:46:01-59272'
+ 8:46:01 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 8:45:45 PM rtkit-daemon: Successfully made thread 59368 of process 59340 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 8:45:18 PM dev.geopjr.Tuba: GtkBox 0x55aad6589370 (box) reported min height 469 and natural height 396 in measure() with for_size=630; natural size must be >= min size
+ 8:44:28 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-20:44:28-58819'
+ 8:44:28 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 8:43:57 PM rtkit-daemon: Successfully made thread 58979 of process 58953 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 8:43:11 PM windsurf: [38194:1120/204311.782165:ERROR:ui/gfx/x/atom_cache.cc:232] Add code/file-list to kAtomsToCache
+ 8:41:40 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-20:41:40-50018'
+ 8:41:40 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 8:40:56 PM localsearch-3: Could not ask extractor to update: The connection is closed
+ 8:36:16 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 8:32:12 PM dev.geopjr.Tuba: GtkBox 0x55aad6181ae0 (box) reported min height 469 and natural height 396 in measure() with for_size=630; natural size must be >= min size
+ 8:31:59 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 8:17:37 PM rtkit-daemon: Successfully made thread 53945 of process 51402 (/usr/lib64/firefox/firefox) owned by '1000' RT at priority 10.
+ 8:17:35 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe79b4a89b0' of type 'MaiAtkType27'
+ 8:15:59 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 8:14:46 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7cc5a9dd0' of type 'MaiAtkType27'
+ 8:11:40 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 8:09:11 PM kernel: perf: interrupt took too long (8322 > 8281), lowering kernel.perf_event_max_sample_rate to 24000
+ 8:08:24 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 8:02:42 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe74afdc650' of type 'MaiAtkType27'
+ 8:02:20 PM freshclam: bytecode.cvd database is up-to-date (version: 339, sigs: 80, f-level: 90, builder: nrandolp)
+ 8:01:01 PM crond: (root) CMDEND (run-parts /etc/cron.hourly)
+ 8:01:01 PM logger: (/etc/cron.hourly) finished 0anacron
+ 8:01:00 PM bash: (root) CMD (run-parts /etc/cron.hourly)
+ 8:00:14 PM rtkit-daemon: Successfully made thread 50128 of process 50103 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 7:59:25 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 7:57:15 PM firefox: ../gobject/gsignal.c:3648: signal name 'text-insert::system' is invalid for instance '0x7fe7bb33bbf0' of type 'MaiAtkType27'
+ 7:55:19 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-19:55:18-48647'
+ 7:55:18 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 7:55:13 PM rtkit-daemon: Successfully made thread 48813 of process 48789 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 7:53:25 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-19:53:25-46077'
+ 7:53:25 PM gnome-shell: Value -9223372036854775808 cannot be safely stored in a JS Number and may be rounded
+ 7:53:25 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 7:52:57 PM gnome-shell: Value -9223372036854775808 cannot be safely stored in a JS Number and may be rounded
+ 7:52:45 PM cupsd: REQUEST localhost - - "POST / HTTP/1.1" 200 192 Renew-Subscription successful-ok
+ 7:52:15 PM rtkit-daemon: Successfully made thread 46198 of process 46146 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 7:51:24 PM kernel: BPF prog-id=78 op=UNLOAD
+ 7:51:24 PM systemd: fwupd.service: Consumed 1.661s CPU time, 44.7M memory peak.
+ 7:51:24 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=fwupd comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 7:51:24 PM systemd: fwupd.service: Deactivated successfully.
+ 7:51:15 PM rtkit-daemon: Successfully made thread 46174 of process 46146 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 7:50:35 PM windsurf: [90m[main 2025-11-20T08:50:35.009Z][0m update#setState idle
+ 7:49:33 PM xdg-desktop-por: Realtime error: Could not map tid 69 of pid 2: Process ids could not be found: 69
+ 7:49:31 PM rtkit-daemon: Successfully made thread 46174 of process 46146 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 7:48:48 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 7:48:31 PM systemd: Started ptyxis-spawn-f318d6f5-01ed-4411-8b20-1e30966182cb.scope - [systemd-run] /usr/bin/bash.
+ 7:48:31 PM ptyxis: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+ 7:48:31 PM systemd: Started dbus-:1.2-org.gnome.Ptyxis@4.service.
+ 7:45:42 PM abrt-server: Deleting problem directory '/var/spool/abrt/Python3-2025-11-20-19:45:42-45762'
+ 7:45:42 PM python: detected unhandled Python exception in '/home/shadowyfigure/Documents/shadowmark2.py'
+ 7:44:45 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 7:01:00 PM crond: (root) CMDEND (run-parts /etc/cron.hourly)
+ 7:01:00 PM logger: (/etc/cron.hourly) finished 0anacron
+ 7:01:00 PM crond: (root) CMD (run-parts /etc/cron.hourly)
+ 6:59:45 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 6:57:30 PM kernel: perf: interrupt took too long (6625 > 6590), lowering kernel.perf_event_max_sample_rate to 30000
+ 6:57:00 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 6:54:25 PM cupsd: REQUEST localhost - - "POST / HTTP/1.1" 200 192 Renew-Subscription successful-ok
+ 6:54:13 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 6:50:37 PM kernel: BPF prog-id=238 op=UNLOAD
+ 6:50:37 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 6:50:37 PM systemd: systemd-hostnamed.service: Deactivated successfully.
+ 6:50:34 PM windsurf: [90m[main 2025-11-20T07:50:34.599Z][0m update#setState idle
+ 6:50:07 PM gnome-keyring-d: asked to register item /org/freedesktop/secrets/collection/login/2, but it's already registered
+ 6:50:04 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 6:50:04 PM systemd: Started systemd-hostnamed.service - Hostname Service.
+ 6:50:04 PM kernel: BPF prog-id=240 op=LOAD
+ 6:50:04 PM windsurf: [90m[main 2025-11-20T07:50:04.214Z][0m update#setState idle
+ 6:50:03 PM systemd: Started app-gnome-windsurf-38194.scope - Application launched by gnome-shell.
+ 6:36:14 PM thunderbird: [ERROR style::stylesheets::rule_parser] Saw @import rule, but no way to trigger the load
+ 6:36:10 PM systemd: dbus-:1.2-org.gnome.Nautilus@6.service: Consumed 6.285s CPU time, 276.7M memory peak.
+ 6:36:10 PM nautilus: Shutting down dropbox extension
+ 6:35:31 PM Isolated Web Co: [36998] Sandbox: seccomp sandbox violation: pid 36998, tid 36998, syscall 16, args 2 2150388778 140729222120784 18446744073709551608 140308338734112 140308338741312.
+ 6:35:27 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 6:35:12 PM Isolated Web Co: [36915] Sandbox: seccomp sandbox violation: pid 36915, tid 36915, syscall 16, args 2 2150388778 140724581678768 18446744073709551608 140065753850912 140065753858112.
+ 6:34:07 PM thunderbird: [ERROR style::stylesheets::rule_parser] Saw @import rule, but no way to trigger the load
+ 6:33:09 PM systemd: dbus-:1.2-org.gnome.Shell.Extensions@2.service: Consumed 3.151s CPU time, 159.9M memory peak.
+ 6:31:33 PM gjs: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+ 6:31:33 PM systemd: Started dbus-:1.2-org.gnome.Shell.Extensions@2.service.
+ 6:31:09 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 6:30:58 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=dnf-makecache comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 6:30:58 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=dnf-makecache comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 6:30:58 PM systemd: dnf-makecache.service: Consumed 802ms CPU time, 145M memory peak.
+ 6:30:58 PM dnf5: Metadata cache created.
+ 6:30:58 PM Isolated Web Co: [36413] Sandbox: seccomp sandbox violation: pid 36413, tid 36413, syscall 16, args 2 2150388778 140723399284176 18446744073709551608 139925020271648 139925020278848.
+ 6:30:57 PM dnf5: Updating and loading repositories:
+ 6:30:57 PM systemd: Starting dnf-makecache.service - dnf5 makecache...
+ 6:30:17 PM gnome-shell: Received multiple virtual 0x2a key presses (ignoring)
+ 6:29:11 PM kernel: BPF prog-id=235 op=UNLOAD
+ 6:29:11 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-timedated comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 6:29:11 PM systemd: systemd-timedated.service: Deactivated successfully.
+ 6:28:44 PM Isolated Web Co: [35807] Sandbox: seccomp sandbox violation: pid 35807, tid 35807, syscall 16, args 2 2150388778 140735933566544 18446744073709551608 139661452309536 139661452316736.
+ 6:28:43 PM rtkit-daemon: Successfully made thread 35826 of process 35589 (/usr/lib64/thunderbird/thunderbird) owned by '1000' RT at priority 10.
+ 6:28:41 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-timedated comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 6:28:41 PM systemd: Started systemd-timedated.service - Time & Date Service.
+ 6:28:41 PM systemd-logind: /boot/loader/entries/c69ec9e530d04f109dd1b604b572809c-6.17.1-300.fc43.x86_64.conf:8: Unknown line 'grub_class', ignoring.
+ 6:28:41 PM systemd: Starting systemd-timedated.service - Time & Date Service...
+ 6:28:41 PM kernel: BPF prog-id=237 op=LOAD
+ 6:28:41 PM systemd: Started app-gnome-net.thunderbird.Thunderbird-35589.scope - Application launched by gnome-shell.
+ 6:27:42 PM kernel: BPF prog-id=232 op=UNLOAD
+ 6:27:42 PM kernel: SERVICE_STOP pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 6:27:42 PM systemd: systemd-hostnamed.service: Deactivated successfully.
+ 6:27:35 PM gnome-text-edit: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+ 6:27:34 PM systemd: Started dbus-:1.2-org.gnome.TextEditor@0.service.
+ 6:27:12 PM kernel: SERVICE_START pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+ 6:27:12 PM systemd: Started systemd-hostnamed.service - Hostname Service.
+ 6:27:12 PM kernel: BPF prog-id=234 op=LOAD
+ 6:27:12 PM systemd: Started dbus-:1.2-org.gnome.NautilusPreviewer@6.service.
+ 6:27:12 PM kernel: BPF prog-id=190 op=UNLOAD
+ 6:27:11 PM nautilus: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+ 6:27:11 PM rsyslogd: imjournal: 142816 messages lost due to rate-limiting (20000 allowed within 600 seconds)
+ 6:27:11 PM nautilus: Initializing nautilus-dropbox 2024.04.17
+ 6:27:11 PM systemd: Started dbus-:1.2-org.gnome.Nautilus@6.service.

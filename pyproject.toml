@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "C", "I", "B", "D"]
+ignore = ["E501"]
+
+[tool.mypy]
+ignore_missing_imports = true
+python_version = "3.10"
+check_untyped_defs = false
+
+[tool.isort]
+profile = "black"

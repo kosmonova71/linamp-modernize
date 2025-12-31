@@ -1,0 +1,53 @@
+ 2:45:49 PM NetworkManager: <warn>  [1765770349.2867] l3cfg[a5e01da13efae224,ifindex=2]: unable to configure IPv6 route: type unicast fe80::/64 dev 2 metric 1024 mss 0 rt-src ipv6ll
+ 2:45:31 PM gnome-logs: MESA-INTEL: warning: ../src/intel/vulkan/anv_formats.c:949: FINISHME: support YUV colorspace with DRM format modifiers
+ 2:45:30 PM systemd: Started dbus-:1.2-org.gnome.Logs@0.service.
+ 2:45:29 PM NetworkManager: <warn>  [1765770329.2730] platform-linux: do-add-ip6-address[2: fe80::117a:bb80:3f1f:8c78]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:44:55 PM gnome-shell: 0x2000004 (Mini Browser): Frame has assigned frame counter but no frame drawn time
+ 2:44:53 PM NetworkManager: <warn>  [1765770293.2506] platform-linux: do-add-ip6-address[2: fe80::cdeb:9982:4c7e:eda4]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:44:24 PM rtkit-daemon: Successfully made thread 483493 of process 483438 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:44:23 PM NetworkManager: <warn>  [1765770263.2347] platform-linux: do-add-ip6-address[2: fe80::117a:bb80:3f1f:8c78]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:44:01 PM rtkit-daemon: Successfully made thread 483490 of process 483438 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:44:01 PM NetworkManager: <warn>  [1765770241.2224] platform-linux: do-add-ip6-address[2: fe80::117a:bb80:3f1f:8c78]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:43:35 PM windsurf: [332326:1215/144335.600442:ERROR:content/browser/browser_main_loop.cc:278] GLib-GObject: ../gobject/gsignal.c:2700: instance '0x3a9c04b1a9c0' has no handler with id '14099'
+ 2:43:27 PM NetworkManager: <warn>  [1765770207.2005] ipv6ll[8b71fc511f434d6f,ifindex=2]: changed: no IPv6 link local address to retry after Duplicate Address Detection failures (back off)
+ 2:42:47 PM gnome-shell: 0x2000004 (Homepage - MyFreeCams — GTK4 Tor Browser): Frame has assigned frame counter but no frame drawn time
+ 2:42:43 PM NetworkManager: <warn>  [1765770163.1756] ipv6ll[8b71fc511f434d6f,ifindex=2]: changed: no IPv6 link local address to retry after Duplicate Address Detection failures (back off)
+ 2:41:27 PM rsyslogd: imjournal: journal files changed, reloading...  [v8.2508.0-1.fc43 try https://www.rsyslog.com/e/0 ]
+ 2:41:27 PM NetworkManager: <warn>  [1765770087.1246] platform-linux: do-add-ip6-address[2: fe80::117a:bb80:3f1f:8c78]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:40:50 PM xdg-desktop-por: Realtime error: Could not map tid 27 of pid 2: Process ids could not be found: 27
+ 2:40:49 PM NetworkManager: <warn>  [1765770049.1037] platform-linux: do-add-ip6-address[2: fe80::95e7:4136:ae8c:9e1a]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:40:42 PM rtkit-daemon: Successfully made thread 482697 of process 482666 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:40:41 PM NetworkManager: <warn>  [1765770041.0968] l3cfg[a5e01da13efae224,ifindex=2]: unable to configure IPv6 route: type unicast fe80::/64 dev 2 metric 1024 mss 0 rt-src ipv6ll
+ 2:40:08 PM rtkit-daemon: Successfully made thread 482715 of process 482666 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:40:07 PM NetworkManager: <warn>  [1765770007.0768] platform-linux: do-add-ip6-address[2: fe80::cdeb:9982:4c7e:eda4]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:38:36 PM xdg-desktop-por: Realtime error: Could not map tid 71 of pid 2: Process ids could not be found: 71
+ 2:38:35 PM NetworkManager: <warn>  [1765769915.0267] platform-linux: do-add-ip6-address[2: fe80::43a2:65b7:4a71:92eb]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:38:33 PM rtkit-daemon: Successfully made thread 482034 of process 482008 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:38:33 PM NetworkManager: <warn>  [1765769913.0247] platform-linux: do-add-ip6-address[2: fe80::c357:7dc0:ec6:9025]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:38:24 PM rtkit-daemon: Successfully made thread 482052 of process 482008 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:38:19 PM NetworkManager: <warn>  [1765769899.0215] ipv6ll[8b71fc511f434d6f,ifindex=2]: changed: no IPv6 link local address to retry after Duplicate Address Detection failures (back off)
+ 2:36:51 PM gnome-shell: 0x2000004 (Shadow Browser): Frame has assigned frame counter but no frame drawn time
+ 2:36:50 PM NetworkManager: <warn>  [1765769810.9745] ipv6ll[8b71fc511f434d6f,ifindex=2]: changed: no IPv6 link local address to retry after Duplicate Address Detection failures (back off)
+ 2:36:49 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 2:36:48 PM NetworkManager: <warn>  [1765769808.9736] platform-linux: do-add-ip6-address[2: fe80::cdeb:9982:4c7e:eda4]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:36:42 PM gnome-shell: 0x2000004 (Shadow Browser): Frame has assigned frame counter but no frame drawn time
+ 2:36:40 PM NetworkManager: <warn>  [1765769800.9679] platform-linux: do-add-ip6-address[2: fe80::117a:bb80:3f1f:8c78]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:36:39 PM gnome-shell: 0x2000004 (Shadow Browser): Frame has assigned frame counter but no frame drawn time
+ 2:36:38 PM NetworkManager: <warn>  [1765769798.9660] l3cfg[a5e01da13efae224,ifindex=2]: unable to configure IPv6 route: type unicast fe80::/64 dev 2 metric 1024 mss 0 rt-src ipv6ll
+ 2:36:05 PM rtkit-daemon: Successfully made thread 481518 of process 481499 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:36:04 PM NetworkManager: <warn>  [1765769764.9495] platform-linux: do-add-ip6-address[2: fe80::cdeb:9982:4c7e:eda4]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:35:03 PM xdg-desktop-por: Realtime error: Could not map tid 71 of pid 2: Process ids could not be found: 71
+ 2:35:00 PM NetworkManager: <warn>  [1765769700.9196] ipv6ll[8b71fc511f434d6f,ifindex=2]: changed: no IPv6 link local address to retry after Duplicate Address Detection failures (back off)
+ 2:35:00 PM rtkit-daemon: Successfully made thread 481004 of process 480980 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:34:58 PM NetworkManager: <warn>  [1765769698.9177] platform-linux: do-add-ip6-address[2: fe80::cdeb:9982:4c7e:eda4]: failure 13 (Permission denied - ipv6: IPv6 is disabled on this device)
+ 2:34:49 PM rtkit-daemon: Successfully made thread 481022 of process 480980 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.
+ 2:34:48 PM NetworkManager: <warn>  [1765769688.9097] l3cfg[a5e01da13efae224,ifindex=2]: unable to configure IPv6 route: type unicast fe80::/64 dev 2 metric 1024 mss 0 rt-src ipv6ll
+ 2:33:35 PM python3: detected unhandled Python exception in 'interactive mode (python -c ...)'
+ 2:33:32 PM NetworkManager: <warn>  [1765769612.8674] ipv6ll[8b71fc511f434d6f,ifindex=2]: changed: no IPv6 link local address to retry after Duplicate Address Detection failures (back off)
+ 2:33:12 PM gnome-shell: Unhandled promise rejection. To suppress this warning, add an error handler to your promise chain with .catch() or a try-catch block around your await expression. Stack trace of the failed promise:
+@resource:///org/gnome/shell/ui/init.js:21:20
+
+ 2:33:10 PM NetworkManager: <warn>  [1765769590.8596] ipv6ll[8b71fc511f434d6f,ifindex=2]: changed: no IPv6 link local address to retry after Duplicate Address Detection failures (back off)
+ 2:32:58 PM gnome-shell: Received multiple virtual 0x1d key presses (ignoring)
+ 2:32:48 PM NetworkManager: <warn>  [1765769568.8476] ipv6ll[8b71fc511f434d6f,ifindex=2]: changed: no IPv6 link local address to retry after Duplicate Address Detection failures (back off)
+ 2:32:24 PM rtkit-daemon: Successfully made thread 480300 of process 480256 (/usr/libexec/webkitgtk-6.0/WebKitWebProcess) owned by '1000' RT at priority 5.

@@ -1,0 +1,5 @@
+ 2:26:04 AM systemd: Failed to start app-gnome-user\x2ddirs\x2dupdate\x2dgtk-4026.scope - Application launched by gnome-session-service.
+ 2:26:02 AM gdm-session-wor: gkr-pam: unable to locate daemon control file
+ 2:23:06 AM kernel: ucsi_acpi USBC000:00: UCSI_GET_PDOS failed (-5)
+ 2:23:06 AM kernel: ucsi_acpi USBC000:00: UCSI_GET_PDOS failed (-5)
+ 2:23:06 AM kernel: ucsi_acpi USBC000:00: unknown error 0
